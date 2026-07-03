@@ -1,0 +1,49 @@
+<!--
+    base.html — shared page shell.
+
+    DESIGN NOTE: Jinja2 template inheritance works like this:
+      - This file defines the overall HTML skeleton (head, nav, footer)
+        plus a "block content" placeholder.
+      - Every other template (index.html, results.html) starts with
+        an "extends base.html" tag and fills in that block.
+
+    (Not writing the actual Jinja tag syntax in this comment on purpose —
+    Jinja parses curly-brace tags even inside HTML comments, so real
+    syntax here would silently break the block below.)
+
+    Why bother? Without this, every page would repeat the same <head>,
+    CSS link, nav bar, and disclaimer footer — and if you wanted to change
+    the site title or add a stylesheet, you'd edit every file. With
+    inheritance, you edit it once, here.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CardioGenome{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header class="site-header">
+        <h1>CardioGenome</h1>
+        <p class="tagline">Could genomics have seen this coming — and who actually gets to find out?</p>
+    </header>
+
+    <main class="site-content">
+        {% block content %}
+        <!-- Child templates override this block with their actual page content -->
+        {% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <p>
+            <strong>Educational tool only — not a medical diagnosis.</strong>
+            CardioGenome is a student project built to explore genomics, ML,
+            and health equity. Do not use it to make real medical decisions.
+        </p>
+    </footer>
+
+</body>
+</html>

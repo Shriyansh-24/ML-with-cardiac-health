@@ -1,0 +1,45 @@
+/*
+  style.css — minimal starter styling.
+
+  Kept intentionally simple for Step 1. We'll add more as each module
+  gets a UI: form styling in Step 2, risk score visuals later, and
+  Plotly chart containers for the equity dashboard in Step 8.
+*/
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background-color: #fafafa;
+}
+
+.site-header {
+    padding: 24px 0 12px;
+    border-bottom: 2px solid #c0392b;
+}
+
+.site-header h1 {
+    margin-bottom: 4px;
+    color: #c0392b;
+}
+
+.tagline {
+    color: #555;
+    font-style: italic;
+    margin-top: 0;
+}
+
+.site-content {
+    padding: 24px 0;
+    min-height: 300px;
+}
+
+.site-footer {
+    border-top: 1px solid #ddd;
+    padding: 16px 0 32px;
+    font-size: 0.9em;
+    color: #444;
+}
