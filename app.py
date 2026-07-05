@@ -16,7 +16,10 @@ As we build out Modules 1-4, this file will grow by a route or two, but
 each route's *body* should stay tiny — a few lines at most.
 """
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
+
+from services import risk_profiler, predictor
+from services.risk_profiler import FormParsingError
 
 app = Flask(__name__)
 
@@ -28,9 +31,6 @@ def index() -> str:
 
     Returns:
         str: Rendered HTML for the landing page / intake form.
-
-    NOTE: This is a placeholder for Step 1. In Step 2, this will render
-    templates/index.html, which contains the full health-data form.
     """
     return render_template("index.html")
 
@@ -38,23 +38,49 @@ def index() -> str:
 @app.route("/results", methods=["POST"])
 def results() -> str:
     """
-    Placeholder for the results route.
+    Handle the submitted intake form and render the risk report.
 
-    This will eventually:
-        1. Pull submitted form data (services/risk_profiler.py, Module 1)
-        2. Run the ML model on that data (services/predictor.py)
-        3. Fetch gene/variant context (services/clinvar_api.py, gwas_api.py)
-        4. Load static gene-editing + equity data (data/*.json)
-        5. Render templates/results.html with everything combined
+    Wires up Module 1 + ML predictor (Step 4):
+        1. Parse the raw form into a typed UserHealthData dict
+        2. Run the hybrid ML + rules predictor for condition scores
+        3. Run the rules-based condition profiler for explainable criteria
+        4. Merge both into a combined view and render
 
-    For now, it just confirms the route exists and returns a stub page,
-    so we can verify the skeleton wires together correctly before adding
-    any real logic.
+    The merge works by condition code (HCM / LQTS / FH): the ML predictor
+    provides the continuous score (0-100) and boosts, while the rules
+    profiler provides the discrete criteria (out of 3) and plain-English
+    reasons. Both contribute to the final report card.
 
     Returns:
-        str: Rendered HTML for the results/report page.
+        str: Rendered HTML for the results/report page. On malformed
+            input, re-renders the intake form with an inline error.
     """
-    return render_template("results.html")
+    try:
+        user_data = risk_profiler.parse_form_data(request.form)
+    except FormParsingError as error:
+        return render_template("index.html", error_message=str(error)), 400
+
+    # Get both ML and rules assessments
+    ml_assessments = predictor.predict_risk(user_data)
+    rules_assessments = risk_profiler.assess_risk(user_data)
+
+    # Merge rules data into ML assessments by condition code
+    rules_by_code = {a["condition"]: a for a in rules_assessments}
+    for ml in ml_assessments:
+        rules = rules_by_code.get(ml["condition"])
+        if rules:
+            ml["rules_score"] = rules["score"]
+            ml["rules_max_score"] = rules["max_score"]
+            ml["rules_reasons"] = rules["reasons"]
+
+    global_chd = ml_assessments[0] if ml_assessments else None
+
+    return render_template(
+        "results.html",
+        ml_assessments=ml_assessments,
+        global_risk_level=global_chd["ml_risk_level"] if global_chd else "Unknown",
+        global_probability=global_chd["ml_probability"] if global_chd else 0,
+    )
 
 
 if __name__ == "__main__":

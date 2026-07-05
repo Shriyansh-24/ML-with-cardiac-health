@@ -1,19 +1,135 @@
 {% extends "base.html" %}
 
 {#
-   results.html — combined report placeholder.
+   results.html — Combined ML + rules risk report (Step 4).
 
-   This will eventually show:
-     - Risk score + plain-English explanation   (Module 1 + ML model)
-     - Relevant genes/variants                  (Module 2)
-     - Gene editing research                    (Module 3)
-     - Equity dashboard chart                   (Module 4)
-   built up incrementally in Steps 4-9 of the build order.
+   This page now shows three layers of risk information per condition:
+
+   1. An ML overview banner at the top — the model's predicted 10-year
+      CHD risk probability and plain-English risk level.
+
+   2. For each condition card, a hybrid ML + rules score (0-100) that
+      combines the model's CHD prediction with condition-specific boosts
+      for family history, symptoms, and genetic variants the model was
+      never trained on.
+
+   3. The rules-based discrete criteria score (out of 3) with detailed
+      plain-English reasons for each criterion matched.
+
+   Template variables:
+       ml_assessments (list[dict]): Hybrid assessments from predictor.py
+       global_risk_level (str): "Low", "Moderate", "Elevated", or "High"
+       global_probability (float): Raw CHD probability from the model
 #}
 
 {% block title %}CardioGenome — Your Risk Report{% endblock %}
 
 {% block content %}
-    <h2>Results page skeleton is working</h2>
-    <p>The full combined report will be built here across Steps 4-9.</p>
+
+    {# Threshold at which the risk flag badge appears (20% CHD probability) #}
+    {% set FLAG_THRESHOLD = 20 %}
+
+    {# ── ML Overview Banner ───────────────────────────────────────────── #}
+    <section class="ml-overview">
+        <h2>Your ML-predicted cardiac risk overview</h2>
+
+        <div class="risk-meter">
+            <span class="risk-level risk-level--{{ global_risk_level | lower | replace('-', '_') }}">
+                {{ global_risk_level }}
+            </span>
+            <span class="risk-probability">
+                {{ "%.1f" | format(global_probability * 100) }}%
+                <span class="risk-label">10-year CHD probability</span>
+            </span>
+            {% if global_probability * 100 >= FLAG_THRESHOLD %}
+            <span class="risk-flag" title="CHD probability is at or above the {{ FLAG_THRESHOLD }}% flag threshold">
+                ⚠ FLAGGED
+            </span>
+            {% endif %}
+        </div>
+
+        <p class="disclaimer-inline">
+            This ML prediction is based on a Random Forest trained on the
+            Framingham Heart Study (4,189 patients) using your age, sex,
+            blood pressure, cholesterol, and heart rate. The model captures
+            patterns in these continuous features but cannot see family
+            history or genetic data — those are added as condition-specific
+            boosts below. This is an educational tool, not a diagnosis.
+        </p>
+    </section>
+
+    {# ── Condition Cards ──────────────────────────────────────────────── #}
+    <h2>Condition-by-condition breakdown</h2>
+
+    <ol class="condition-list">
+        {% for assessment in ml_assessments %}
+        <li class="condition-card">
+            <h3>{{ assessment.full_name }} ({{ assessment.condition }})</h3>
+
+            {# Hybrid score bar #}
+            <div class="hybrid-score-bar">
+                <div class="hybrid-score-fill" style="width: {{ assessment.hybrid_score }}%;">
+                    <span class="hybrid-score-text">{{ assessment.hybrid_score }}/100</span>
+                </div>
+            </div>
+
+            <p class="score-detail">
+                <strong>{{ assessment.hybrid_score }}/100</strong> combined risk score
+                — <strong>{{ assessment.ml_base_score }}/40</strong> from ML model
+                + <strong>{{ (assessment.hybrid_score | int) - (assessment.ml_base_score | int) }}</strong>
+                from rules-based boosts
+            </p>
+
+            {# Rules-based criteria #}
+            <p class="rules-score">
+                Matched <strong>{{ assessment.rules_score }}</strong> of
+                <strong>{{ assessment.rules_max_score }}</strong> simplified
+                clinical risk criteria
+            </p>
+
+            {# Boosts from the hybrid predictor #}
+            {% if assessment.boosts %}
+            <h4>Why this score was boosted</h4>
+            <ul class="reasons">
+                {% for boost in assessment.boosts %}
+                <li>{{ boost }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {# Rules-based reasons #}
+            {% if assessment.rules_reasons %}
+            <h4>Clinical criteria matched</h4>
+            <ul class="reasons">
+                {% for reason in assessment.rules_reasons %}
+                <li>{{ reason }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-reasons">None of the simplified clinical criteria were matched.</p>
+            {% endif %}
+
+            <p class="genes">Associated genes: {{ assessment.genes | join(", ") }}</p>
+
+            {# ML details expandable #}
+            <details class="ml-details">
+                <summary>How the ML model scored this</summary>
+                <p>
+                    The Random Forest model predicted a
+                    <strong>{{ "%.1f" | format(global_probability * 100) }}%</strong>
+                    probability of 10-year CHD for someone with your age, sex,
+                    blood pressure, cholesterol, and heart rate. This contributed
+                    <strong>{{ assessment.ml_base_score }}</strong> points to the
+                    {{ assessment.condition }} score (out of a maximum of 40).
+                </p>
+                <p>
+                    The remaining points come from condition-specific factors the
+                    model never saw during training — family history, symptoms, and
+                    genetic variants — applied as clinical rules above.
+                </p>
+            </details>
+        </li>
+        {% endfor %}
+    </ol>
+
 {% endblock %}

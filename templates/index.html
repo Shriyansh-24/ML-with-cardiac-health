@@ -1,17 +1,125 @@
 {% extends "base.html" %}
 
 {#
-   index.html — intake form placeholder.
+   index.html — full health intake form (Step 2).
 
-   This is deliberately minimal for Step 1, just to prove the skeleton
-   renders end-to-end. In Step 2, this block will be replaced with the
-   full form: biological sex, age, ethnicity, family history, vitals,
-   and optional genetic variant checkboxes described in the build spec.
+   DESIGN NOTE: field `name` attributes here are the contract with
+   services/risk_profiler.py's `parse_form_data()`. If you rename a field
+   here, update that function too — Flask's request.form is just a plain
+   string dict, so nothing will warn you at "compile time" if these drift
+   apart. This is the one place in the codebase where that pairing has to
+   be kept in sync by hand.
+
+   The family_scd_relation dropdown is always rendered (rather than
+   JS-hidden until "yes" is picked) to keep this step dependency-free —
+   the profiler simply ignores it when family_scd is "no".
 #}
 
 {% block title %}CardioGenome — Get Your Risk Profile{% endblock %}
 
 {% block content %}
-    <h2>Step 1 skeleton is working</h2>
-    <p>The full health intake form will be built here in Step 2.</p>
+    <h2>Tell us about your health &amp; family history</h2>
+    <p>
+        This takes about two minutes. Nothing here is stored — it's used
+        once, to generate your report, then discarded.
+    </p>
+
+    {% if error_message %}
+    <p class="form-error">Please check your answers: {{ error_message }}</p>
+    {% endif %}
+
+    <form action="{{ url_for('results') }}" method="post" class="intake-form">
+
+        <fieldset>
+            <legend>About you</legend>
+
+            <label for="biological_sex">Biological sex</label>
+            <select id="biological_sex" name="biological_sex" required>
+                <option value="" disabled selected>Select one</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+
+            <label for="age">Age</label>
+            <input type="number" id="age" name="age" min="0" max="120" required>
+
+            <label for="ethnicity">Ethnicity</label>
+            <select id="ethnicity" name="ethnicity" required>
+                <option value="" disabled selected>Select one</option>
+                <option value="european">European</option>
+                <option value="south_asian">South Asian</option>
+                <option value="east_asian">East Asian</option>
+                <option value="african">African</option>
+                <option value="hispanic">Hispanic</option>
+                <option value="other">Other</option>
+            </select>
+        </fieldset>
+
+        <fieldset>
+            <legend>Family history</legend>
+
+            <p>Family history of sudden cardiac death?</p>
+            <label class="inline"><input type="radio" name="family_scd" value="yes"> Yes</label>
+            <label class="inline"><input type="radio" name="family_scd" value="no" checked> No</label>
+
+            <label for="family_scd_relation">If yes, which relation?</label>
+            <select id="family_scd_relation" name="family_scd_relation">
+                <option value="" selected>N/A</option>
+                <option value="parent">Parent</option>
+                <option value="sibling">Sibling</option>
+                <option value="grandparent">Grandparent</option>
+            </select>
+
+            <p>Family history of a heart attack before age 50?</p>
+            <label class="inline"><input type="radio" name="family_early_mi" value="yes"> Yes</label>
+            <label class="inline"><input type="radio" name="family_early_mi" value="no" checked> No</label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Personal history</legend>
+
+            <p>Have you personally experienced fainting or an irregular heartbeat?</p>
+            <label class="inline"><input type="radio" name="personal_arrhythmia" value="yes"> Yes</label>
+            <label class="inline"><input type="radio" name="personal_arrhythmia" value="no" checked> No</label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Vitals &amp; labs</legend>
+
+            <label for="resting_hr">Resting heart rate (bpm)</label>
+            <input type="number" id="resting_hr" name="resting_hr" min="20" max="250" required>
+
+            <label for="systolic_bp">Systolic blood pressure (mmHg)</label>
+            <input type="number" id="systolic_bp" name="systolic_bp" min="50" max="260" required>
+
+            <label for="total_cholesterol">Total cholesterol (mg/dL)</label>
+            <input type="number" id="total_cholesterol" name="total_cholesterol" min="50" max="500" required>
+
+            <label for="ldl_cholesterol">LDL cholesterol (mg/dL)</label>
+            <input type="number" id="ldl_cholesterol" name="ldl_cholesterol" min="20" max="400" required>
+        </fieldset>
+
+        <fieldset>
+            <legend>Genetic variant flags (optional)</legend>
+            <p class="hint">
+                Leave these unchecked if you don't have genetic testing
+                results — the report still runs without them.
+            </p>
+
+            <label class="inline">
+                <input type="checkbox" name="variant_myh7" value="yes">
+                MYH7 pathogenic variant (linked to HCM)
+            </label>
+            <label class="inline">
+                <input type="checkbox" name="variant_kcnq1" value="yes">
+                KCNQ1 pathogenic variant (linked to Long QT)
+            </label>
+            <label class="inline">
+                <input type="checkbox" name="variant_ldlr" value="yes">
+                LDLR pathogenic variant (linked to Familial Hypercholesterolaemia)
+            </label>
+        </fieldset>
+
+        <button type="submit">Get my risk report</button>
+    </form>
 {% endblock %}
