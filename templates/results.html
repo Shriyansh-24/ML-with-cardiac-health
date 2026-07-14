@@ -20,6 +20,7 @@
        ml_assessments (list[dict]): Hybrid assessments from predictor.py
        global_risk_level (str): "Low", "Moderate", "Elevated", or "High"
        global_probability (float): Raw CHD probability from the model
+       clinvar_data (dict): ClinVar variant data for MYH7 (from clinvar_api.py)
 #}
 
 {% block title %}CardioGenome — Your Risk Report{% endblock %}
@@ -110,6 +111,76 @@
             {% endif %}
 
             <p class="genes">Associated genes: {{ assessment.genes | join(", ") }}</p>
+
+            {# ── ClinVar variant data (Module 2) ───────────────────── #}
+            {% if assessment.condition == "HCM" and clinvar_data and not clinvar_data.error %}
+            <details class="clinvar-data">
+                <summary>
+                    Gene variant data from ClinVar
+                    <span class="clinvar-badge">{{ clinvar_data.total_variants }} variants</span>
+                </summary>
+
+                <p class="clinvar-summary">
+                    The NCBI ClinVar database contains
+                    <strong>{{ clinvar_data.total_variants }}</strong>
+                    submitted variants for the
+                    <strong>{{ clinvar_data.gene }}</strong> gene.
+                    Below is a breakdown of the most recent
+                    {{ clinvar_data.notable_variants | length }} pathogenic
+                    and likely-pathogenic variants.
+                </p>
+
+                {# Significance breakdown #}
+                {% if clinvar_data.summary_by_significance %}
+                <h4>Clinical significance breakdown</h4>
+                <ul class="clinvar-breakdown">
+                    {% for bucket, count in clinvar_data.summary_by_significance.items() %}
+                    <li>
+                        <span class="clinvar-bucket">{{ bucket }}</span>
+                        <span class="clinvar-count">{{ count }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+                {# Notable variants #}
+                {% if clinvar_data.notable_variants %}
+                <h4>Notable pathogenic / likely-pathogenic variants</h4>
+                <div class="clinvar-variants">
+                    {% for variant in clinvar_data.notable_variants %}
+                    <div class="clinvar-variant">
+                        <div class="clinvar-variant-title">{{ variant.title }}</div>
+                        <div class="clinvar-variant-meta">
+                            <span class="clinvar-sig clinvar-sig--{{ variant.clinical_significance | lower | replace(' ', '_') }}">
+                                {{ variant.clinical_significance }}
+                            </span>
+                            <span>{{ variant.variant_type }}</span>
+                            <span>{{ variant.condition }}</span>
+                            {% if variant.protein_change and variant.protein_change != '—' %}
+                            <span>Protein: {{ variant.protein_change }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <p class="clinvar-note">
+                    Data fetched from NCBI ClinVar on
+                    {{ clinvar_data.fetched_at.split('T')[0] }}.
+                    This is a sample of the most recent variants — not an
+                    exhaustive list. Always consult a clinician for
+                    interpretation of genetic test results.
+                </p>
+            </details>
+            {% elif clinvar_data.error %}
+            <details class="clinvar-data">
+                <summary>Gene variant data (unavailable)</summary>
+                <p class="clinvar-note clinvar-note--warn">
+                    Could not fetch ClinVar data: {{ clinvar_data.error }}
+                </p>
+            </details>
+            {% endif %}
 
             {# ML details expandable #}
             <details class="ml-details">

@@ -27,9 +27,12 @@ Then visit `http://127.0.0.1:5000`.
       (`ml/train_model.py` — Random Forest, GridSearchCV, 10-fold CV, 0.715 ROC-AUC)
 - [x] Step 4 — ML inference + hybrid predictor wired into results route
       (`services/predictor.py` — combines ML output with family history / variant boosts)
+- [x] Step 5 — Module 2: ClinVar API (MYH7 only)
+      (`services/clinvar_api.py` — fetches real MYH7 variant data from NCBI E-utilities;
+      displays total variant count, clinical significance breakdown, and notable variants
+      in an expandable section on the HCM condition card)
 
 **What's next:**
-- [ ] Step 5 — Module 2: ClinVar API (MYH7 only)
 - [ ] Step 6 — Module 2: GWAS Catalog + remaining genes
 - [ ] Step 7 — Module 3: gene editing research dataset + display
 - [ ] Step 8 — Module 4: equity dataset + Plotly visualisation
@@ -47,7 +50,8 @@ cardiogenome/
 │   └── README.md           # Detailed model card with metrics & limitations
 ├── services/               # Business logic: risk rules, ML inference, API calls
 │   ├── risk_profiler.py    # Module 1: rules-based scoring (0-3 per condition)
-│   └── predictor.py        # Step 4: hybrid ML + rules predictor (0-100 per condition)
+│   ├── predictor.py        # Step 4: hybrid ML + rules predictor (0-100 per condition)
+│   └── clinvar_api.py      # Module 2: ClinVar E-utilities fetcher (MYH7 variant data)
 ├── templates/              # Jinja2 templates (base/index/results)
 │   ├── base.html           # Shared HTML shell
 │   ├── index.html          # Full intake form (15+ fields across 5 fieldsets)

@@ -18,7 +18,7 @@ each route's *body* should stay tiny — a few lines at most.
 
 from flask import Flask, render_template, request
 
-from services import risk_profiler, predictor
+from services import risk_profiler, predictor, clinvar_api
 from services.risk_profiler import FormParsingError
 
 app = Flask(__name__)
@@ -73,6 +73,9 @@ def results() -> str:
             ml["rules_max_score"] = rules["max_score"]
             ml["rules_reasons"] = rules["reasons"]
 
+    # Module 2: fetch real ClinVar variant data for MYH7 (HCM-associated gene)
+    clinvar_data = clinvar_api.fetch_gene_variants("MYH7")
+
     global_chd = ml_assessments[0] if ml_assessments else None
 
     return render_template(
@@ -80,6 +83,7 @@ def results() -> str:
         ml_assessments=ml_assessments,
         global_risk_level=global_chd["ml_risk_level"] if global_chd else "Unknown",
         global_probability=global_chd["ml_probability"] if global_chd else 0,
+        clinvar_data=clinvar_data,
     )
 
 
