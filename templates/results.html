@@ -69,15 +69,15 @@
 
             {# Hybrid score bar #}
             <div class="hybrid-score-bar">
-                <div class="hybrid-score-fill" style="width: {{ assessment.hybrid_score }}%;">
-                    <span class="hybrid-score-text">{{ assessment.hybrid_score }}/100</span>
+                <div class="hybrid-score-fill" style="width: {{ "%.3f" | format(assessment.hybrid_score) }}%;">
+                    <span class="hybrid-score-text">{{ "%.3f" | format(assessment.hybrid_score) }}/100</span>
                 </div>
             </div>
 
             <p class="score-detail">
-                <strong>{{ assessment.hybrid_score }}/100</strong> combined risk score
+                <strong>{{ "%.3f" | format(assessment.hybrid_score) }}/100</strong> combined risk score
                 — <strong>{{ assessment.ml_base_score }}/40</strong> from ML model
-                + <strong>{{ (assessment.hybrid_score | int) - (assessment.ml_base_score | int) }}</strong>
+                + <strong>{{ (assessment.hybrid_score - assessment.ml_base_score) | round(3) }}</strong>
                 from rules-based boosts
             </p>
 

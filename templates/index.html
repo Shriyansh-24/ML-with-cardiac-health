@@ -28,7 +28,7 @@
     <p class="form-error">Please check your answers: {{ error_message }}</p>
     {% endif %}
 
-    <form action="{{ url_for('results') }}" method="post" class="intake-form">
+    <form action="{{ url_for('results') }}" method="post" class="intake-form" id="intakeForm">
 
         <fieldset>
             <legend>About you</legend>
@@ -122,4 +122,70 @@
 
         <button type="submit">Get my risk report</button>
     </form>
+
+    {# ── Loading Screen Overlay ───────────────────────────────────────── #}
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-container">
+            <div class="loading-heart">
+                <svg viewBox="0 0 100 100" class="heart-svg">
+                    <path d="M50 88 C20 60, 5 45, 5 30 C5 15, 20 5, 35 5 C42 5, 48 10, 50 15 C52 10, 58 5, 65 5 C80 5, 95 15, 95 30 C95 45, 80 60, 50 88Z" fill="none" stroke="#e74c3c" stroke-width="3"/>
+                </svg>
+                <div class="heart-pulse-ring"></div>
+                <div class="heart-pulse-ring ring-2"></div>
+                <div class="heart-pulse-ring ring-3"></div>
+            </div>
+            <div class="loading-text">
+                <span class="loading-title">Analysing your cardiac profile</span>
+                <span class="loading-sub">Running ML model</span>
+                <div class="loading-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+            <div class="loading-bars">
+                <div class="loading-bar bar-1"></div>
+                <div class="loading-bar bar-2"></div>
+                <div class="loading-bar bar-3"></div>
+                <div class="loading-bar bar-4"></div>
+                <div class="loading-bar bar-5"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var form = document.getElementById('intakeForm');
+            var overlay = document.getElementById('loadingOverlay');
+            var subTexts = [
+                'Running ML model',
+                'Scoring risk factors',
+                'Fetching gene data',
+                'Generating report'
+            ];
+            var subEl = overlay.querySelector('.loading-sub');
+            var barEls = overlay.querySelectorAll('.loading-bar');
+            var textIndex = 0;
+
+            if (form && overlay) {
+                form.addEventListener('submit', function(e) {
+                    overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+
+                    // Cycle status text through stages (bars stay filled)
+                    var textTimer = setInterval(function() {
+                        textIndex = (textIndex + 1) % subTexts.length;
+                        if (subEl) subEl.textContent = subTexts[textIndex];
+                    }, 2500);
+
+                    // First bar wave immediately (once, stays filled)
+                    setTimeout(function() {
+                        barEls.forEach(function(b, i) {
+                            setTimeout(function() {
+                                b.style.width = '100%';
+                            }, i * 200);
+                        });
+                    }, 300);
+                });
+            }
+        })();
+    </script>
 {% endblock %}
