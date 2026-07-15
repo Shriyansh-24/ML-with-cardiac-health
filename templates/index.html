@@ -171,7 +171,7 @@
                     document.body.style.overflow = 'hidden';
 
                     // Cycle status text through stages (bars stay filled)
-                    var textTimer = setInterval(function() {
+                    setInterval(function() {
                         textIndex = (textIndex + 1) % subTexts.length;
                         if (subEl) subEl.textContent = subTexts[textIndex];
                     }, 2500);
