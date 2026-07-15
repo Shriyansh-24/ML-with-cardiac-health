@@ -199,6 +199,8 @@
         </section>
         {% endif %}
 
+
+
         {# ── Associated genes ── #}
         <section class="detail-section">
           <h4 class="detail-title">🧬 Associated genes</h4>
@@ -210,6 +212,64 @@
   </li>
   {% endfor %}
 </ol>
+
+{# ═══════════════════ Advanced: Gene Editing Research ═════════════════ #}
+<details class="research-section">
+  <summary class="research-summary">
+    <span class="research-icon">🔬</span>
+    <span class="research-summary-text">Advanced: Gene Editing Research</span>
+    <span class="research-badge">3 conditions</span>
+    <span class="chevron">▶</span>
+  </summary>
+  <div class="research-body">
+    <p class="research-intro">
+      This section covers current gene editing and gene therapy approaches in
+      development for the three conditions screened above. Data is compiled from
+      public clinical trial registries and research publications.
+      <strong>None of these therapies are clinically available for routine use.</strong>
+    </p>
+
+    {% for condition_code in ["HCM", "LQTS", "FH"] %}
+    {% set condition_editing = gene_editing.conditions.get(condition_code) %}
+    {% if condition_editing and condition_editing.approaches %}
+    <div class="research-condition">
+      <h3 class="research-condition-title">
+        {{ condition_editing.full_name }}
+        <span class="card-code">{{ condition_code }}</span>
+      </h3>
+      <p class="detail-text">{{ condition_editing.summary }}</p>
+      <div class="editing-cards">
+        {% for approach in condition_editing.approaches %}
+        <div class="editing-card">
+          <div class="editing-card-header">
+            <span class="editing-type">{{ approach.type }}</span>
+            <span class="editing-phase editing-phase--{{ approach.phase | lower | replace(' ', '_') | replace('/', '_') | replace('(', '') | replace(')', '') }}">
+              {{ approach.phase }}
+            </span>
+          </div>
+          <div class="editing-card-target">Target: <strong>{{ approach.target }}</strong></div>
+          <p class="editing-card-desc">{{ approach.description }}</p>
+          {% if approach.developer %}
+          <div class="editing-card-dev">Developer: {{ approach.developer }}</div>
+          {% endif %}
+          {% if approach.trial %}
+          <div class="editing-card-trial">Trial: {{ approach.trial }}</div>
+          {% endif %}
+          <p class="editing-card-finding">{{ approach.key_finding }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    <p class="detail-footnote">
+      Data compiled {{ gene_editing.last_updated }}. Clinical trial status changes rapidly —
+      consult <a href="https://clinicaltrials.gov" target="_blank" rel="noopener">ClinicalTrials.gov</a>
+      for the most current information.
+    </p>
+  </div>
+</details>
 
 {# ── Score bar animation (runs once on page load) ── #}
 <script>

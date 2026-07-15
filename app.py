@@ -18,6 +18,9 @@ each route's *body* should stay tiny — a few lines at most.
 
 from flask import Flask, render_template, request
 
+import json
+import os
+
 from services import risk_profiler, predictor, clinvar_api
 from services.risk_profiler import FormParsingError
 
@@ -76,6 +79,18 @@ def results() -> str:
     # Module 2: fetch real ClinVar variant data for MYH7 (HCM-associated gene)
     clinvar_data = clinvar_api.fetch_gene_variants("MYH7")
 
+    # Module 3: load static gene editing research dataset
+    editing_path = os.path.join(os.path.dirname(__file__), "data", "gene_editing.json")
+    if os.path.exists(editing_path):
+        with open(editing_path, "r") as f:
+            gene_editing_full = json.load(f)
+        gene_editing_data = {
+            "conditions": gene_editing_full.get("conditions", {}),
+            "last_updated": gene_editing_full.get("last_updated", ""),
+        }
+    else:
+        gene_editing_data = {"conditions": {}, "last_updated": ""}
+
     global_chd = ml_assessments[0] if ml_assessments else None
 
     return render_template(
@@ -84,6 +99,7 @@ def results() -> str:
         global_risk_level=global_chd["ml_risk_level"] if global_chd else "Unknown",
         global_probability=global_chd["ml_probability"] if global_chd else 0,
         clinvar_data=clinvar_data,
+        gene_editing=gene_editing_data,
     )
 
 

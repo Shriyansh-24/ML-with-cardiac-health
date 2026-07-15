@@ -1,0 +1,113 @@
+{
+  "last_updated": "2025-12-01",
+  "conditions": {
+    "HCM": {
+      "full_name": "Hypertrophic Cardiomyopathy",
+      "summary": "HCM is the most common inherited cardiac condition. Two main genetic strategies are in development: gene replacement for MYBPC3 (which causes disease through protein deficiency) and CRISPR-based editing for MYH7 (which causes disease through dominant-negative mutant proteins).",
+      "approaches": [
+        {
+          "type": "Gene Replacement",
+          "target": "MYBPC3",
+          "description": "TN-201 delivers a functional copy of the MYBPC3 gene via AAV9 vector to restore myosin-binding protein C levels in heart muscle cells.",
+          "developer": "Tenaya Therapeutics",
+          "trial": "MyPEAK-1 (NCT05836259)",
+          "phase": "Phase 1b/2a",
+          "status": "Active — first-in-human trial; initial data shows good tolerability and increased protein expression. Clinical hold lifted Dec 2025.",
+          "key_finding": "AAV9-mediated gene replacement can restore MyBP-C protein in humans. The critical question is whether sufficient protein levels translate to clinical improvement."
+        },
+        {
+          "type": "Base Editing",
+          "target": "MYH7",
+          "description": "Adenine base editors (ABEs) precisely correct pathogenic MYH7 point mutations (e.g. p.Arg403Gln) by converting a single DNA nucleotide without creating double-strand breaks.",
+          "developer": "Academic research (multiple groups)",
+          "trial": "Preclinical",
+          "phase": "Preclinical",
+          "status": "Animal models — successful correction in pre-symptomatic mice prevents cardiac hypertrophy and fibrosis.",
+          "key_finding": "Single-dose base editing can prevent HCM phenotypes in animal models when delivered early. Human translation faces delivery and off-target challenges."
+        },
+        {
+          "type": "Allele-Specific Silencing",
+          "target": "MYH7",
+          "description": "CRISPR-Cas9 or RNAi selectively disrupts the mutant MYH7 allele while leaving the healthy copy intact, stopping production of toxic dominant-negative protein.",
+          "developer": "Academic research",
+          "trial": "Preclinical",
+          "phase": "Preclinical",
+          "status": "In vitro and early animal studies — proof-of-concept demonstrated for allele-specific knockdown.",
+          "key_finding": "Silencing the mutant allele is promising for dominant-negative MYH7 mutations, but each mutation may require a custom guide RNA."
+        }
+      ]
+    },
+    "LQTS": {
+      "full_name": "Long QT Syndrome",
+      "summary": "LQTS gene therapy is less clinically advanced than HCM but has seen breakthrough preclinical results. The leading approach is suppression-replacement (SupRep), which silences the faulty gene and replaces it with a corrected copy in a single delivery.",
+      "approaches": [
+        {
+          "type": "Suppression-Replacement (SupRep)",
+          "target": "KCNQ1 (LQT1)",
+          "description": "A single AAV vector delivers both a shRNA to suppress endogenous KCNQ1 (both healthy and mutant copies) and a replacement KCNQ1 gene engineered to be immune to suppression.",
+          "developer": "Mayo Clinic / Solid Biosciences",
+          "trial": "Preclinical",
+          "phase": "Preclinical",
+          "status": "Proven in transgenic rabbit models — normalised QT intervals and reduced arrhythmia risk. Moving toward IND-enabling studies.",
+          "key_finding": "SupRep can normalise QT intervals in a large-animal model. The approach is gene-specific rather than mutation-specific, making it applicable to most LQT1 patients."
+        },
+        {
+          "type": "Suppression-Replacement (SupRep)",
+          "target": "KCNH2 (LQT2)",
+          "description": "Same SupRep strategy adapted for KCNH2. The shRNA targets KCNH2 transcripts while a codon-optimised replacement gene restores functional hERG potassium channels.",
+          "developer": "Academic research / Mayo Clinic",
+          "trial": "Preclinical",
+          "phase": "Preclinical",
+          "status": "Proof-of-concept in animal models. Behind LQT1 SupRep in development timeline.",
+          "key_finding": "KCNH2 SupRep faces additional challenges due to the larger gene size and more complex splicing, but early results are promising."
+        },
+        {
+          "type": "Pharmacological Precision Therapy",
+          "target": "SCN5A (LQT3)",
+          "description": "For LQT3 (gain-of-function SCN5A mutations), precision drug therapy with mexiletine blocks the pathological late sodium current rather than editing the gene directly.",
+          "developer": "Multiple (established clinical use)",
+          "trial": "FDA-approved for LQT3",
+          "phase": "Approved",
+          "status": "Clinical standard — mexiletine effectively shortens QT interval in LQT3 patients. Research into next-generation sodium channel blockers continues.",
+          "key_finding": "LQT3 is currently managed pharmacologically rather than with gene therapy. Gene editing for SCN5A remains early-stage laboratory research."
+        }
+      ]
+    },
+    "FH": {
+      "full_name": "Familial Hypercholesterolaemia",
+      "summary": "FH has the most clinically advanced gene-targeted therapies of the three conditions. PCSK9-targeting approaches (both siRNA and base editing) are already in human trials, with inclisiran FDA-approved and VERVE-102 in Phase 1b.",
+      "approaches": [
+        {
+          "type": "Gene Silencing (siRNA)",
+          "target": "PCSK9",
+          "description": "Inclisiran is a small interfering RNA (siRNA) that inhibits PCSK9 production in the liver, increasing LDL receptor availability and lowering LDL cholesterol.",
+          "developer": "Novartis / Alnylam",
+          "trial": "Multiple Phase 3 trials (ORION series)",
+          "phase": "FDA Approved",
+          "status": "Approved for primary hypercholesterolaemia including HeFH. Administered as a twice-yearly injection. Reduces LDL-C by ~50%.",
+          "key_finding": "Inclisiran is the first approved siRNA therapy for FH. Twice-yearly dosing dramatically improves adherence over daily statins."
+        },
+        {
+          "type": "Base Editing",
+          "target": "PCSK9",
+          "description": "VERVE-102 uses adenine base editor delivered via lipid nanoparticles (LNPs) to permanently inactivate the PCSK9 gene in liver cells with a single infusion.",
+          "developer": "Verve Therapeutics",
+          "trial": "Heart-2 (Phase 1b)",
+          "phase": "Phase 1b",
+          "status": "Active — single infusion reduced PCSK9 and LDL-C by up to 53% in the 0.6 mg/kg cohort. Well-tolerated with no serious adverse events reported.",
+          "key_finding": "First-in-human base editing shows that a one-time treatment can produce sustained LDL-C reduction. Long-term durability and safety monitoring continues."
+        },
+        {
+          "type": "Gene Replacement",
+          "target": "LDLR",
+          "description": "AAV-mediated delivery of a functional LDLR gene to liver cells to restore LDL receptor expression in patients with homozygous FH (HoFH) who have little to no receptor function.",
+          "developer": "Multiple academic groups",
+          "trial": "NCT02651675 and others",
+          "phase": "Phase 1/2",
+          "status": "Early clinical trials — immune responses and transient expression in dividing liver cells remain significant hurdles. Being explored primarily for HoFH where no other options exist.",
+          "key_finding": "Gene replacement for LDLR is most needed for HoFH but faces major delivery and durability challenges. Base editing of PCSK9 is currently more promising."
+        }
+      ]
+    }
+  }
+}
