@@ -1,9 +1,11 @@
 /*
-  style.css — minimal starter styling.
-
-  Kept intentionally simple for Step 1. We'll add more as each module
-  gets a UI: form styling in Step 2, risk score visuals later, and
-  Plotly chart containers for the equity dashboard in Step 8.
+  style.css — CardioGenome styles.
+  
+  Sections:
+    1. Base layout (body, header, footer)
+    2. Intake form
+    3. Results page — overview card & condition cards
+    4. Loading screen overlay
 */
 
 body {
@@ -44,7 +46,9 @@ body {
     color: #444;
 }
 
-/* --- Intake form (Step 2) --- */
+/* ==================================================================
+   2. Intake form
+   ================================================================== */
 
 fieldset {
     border: 1px solid #ddd;
@@ -114,94 +118,72 @@ legend {
     border-radius: 6px;
 }
 
-/* --- Results page (Step 2) --- */
+/* ==================================================================
+   3. Results page — clean, card-based layout
+   ================================================================== */
 
-.disclaimer-inline {
-    font-style: italic;
-    color: #555;
-}
+/* ── ML Overview card ──────────────────────────────────────────── */
 
-.condition-list {
-    list-style: none;
-    padding: 0;
-}
-
-.condition-card {
+.overview-card {
     background: #fff;
-    border: 1px solid #ddd;
-    border-left: 4px solid #c0392b;
-    border-radius: 6px;
-    padding: 14px 20px;
-    margin-bottom: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 32px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
-.condition-card .score {
+.overview-title {
+    margin: 0 0 16px;
+    font-size: 1.1em;
+    color: #1a1a1a;
     font-weight: 600;
 }
 
-.condition-card .genes {
-    color: #555;
-    font-size: 0.95em;
-}
-
-.condition-card .reasons {
-    margin-top: 8px;
-}
-
-/* --- Results page: ML overview banner (Step 4) --- */
-
-.ml-overview {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px 24px;
-    margin-bottom: 28px;
-}
-
-.ml-overview h2 {
-    margin-top: 0;
-    margin-bottom: 16px;
-    color: #1a1a1a;
-}
-
-.risk-meter {
+.overview-row {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 14px;
+    gap: 14px;
+    flex-wrap: wrap;
 }
 
-.risk-level {
+.overview-badge {
     display: inline-block;
-    padding: 6px 16px;
+    padding: 5px 14px;
     border-radius: 20px;
     font-weight: 700;
-    font-size: 0.95em;
-    letter-spacing: 0.3px;
+    font-size: 0.85em;
+    letter-spacing: 0.4px;
     text-transform: uppercase;
 }
 
-.risk-level--low              { background: #d4edda; color: #155724; }
-.risk-level--low_moderate     { background: #fff3cd; color: #856404; }
-.risk-level--moderate         { background: #ffeeba; color: #856404; }
-.risk-level--elevated         { background: #fdecea; color: #922b21; }
-.risk-level--high             { background: #f8d7da; color: #721c24; }
+.overview-badge--low              { background: #d4edda; color: #155724; }
+.overview-badge--low_moderate     { background: #fff3cd; color: #856404; }
+.overview-badge--moderate         { background: #ffeeba; color: #856404; }
+.overview-badge--elevated         { background: #fdecea; color: #922b21; }
+.overview-badge--high             { background: #f8d7da; color: #721c24; }
 
-.risk-probability {
-    font-size: 1.8em;
-    font-weight: 700;
+.overview-pct {
+    font-size: 2em;
+    font-weight: 800;
     color: #1a1a1a;
-    line-height: 1.2;
+    line-height: 1.1;
 }
 
-.risk-flag {
+.overview-label {
+    font-size: 0.85em;
+    color: #777;
+    font-weight: 400;
+}
+
+.flag-badge {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 5px 14px;
+    padding: 4px 12px;
     border-radius: 20px;
     font-weight: 800;
-    font-size: 0.8em;
+    font-size: 0.75em;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     color: #fff;
@@ -217,220 +199,424 @@ legend {
     100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
 }
 
-/* Small screen: make the flag stack below the probability */
-@media (max-width: 600px) {
-    .risk-flag {
-        align-self: flex-start;
-        margin-top: 4px;
+.overview-note {
+    margin: 14px 0 0;
+    font-size: 0.85em;
+    color: #888;
+    line-height: 1.5;
+}
+
+/* ── Section heading ───────────────────────────────────────────── */
+
+.section-heading {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 16px;
+}
+
+/* ── Card grid ─────────────────────────────────────────────────── */
+
+.card-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 20px;
+}
+
+@media (min-width: 700px) {
+    .card-list {
+        grid-template-columns: 1fr 1fr;
     }
 }
 
-.risk-label {
-    display: block;
-    font-size: 0.5em;
-    font-weight: 400;
-    color: #666;
-}
+/* ── Individual card ───────────────────────────────────────────── */
 
-/* --- Results page: hybrid score bar --- */
-
-.hybrid-score-bar {
-    height: 24px;
-    background: #eee;
+.card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
     border-radius: 12px;
-    overflow: hidden;
-    margin: 10px 0;
+    padding: 20px 22px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.hybrid-score-fill {
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+/* Color accent by risk level */
+.card--none      { border-top: 3px solid #ddd; }
+.card--detected  { border-top: 3px solid #c0392b; }
+
+/* ── Card header ───────────────────────────────────────────────── */
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.card-title-group {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.card-title {
+    margin: 0;
+    font-size: 1.05em;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.card-code {
+    font-size: 0.7em;
+    font-weight: 600;
+    color: #999;
+    background: #f0f0f0;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+}
+
+.card-score-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+}
+
+.card-score-num {
+    font-size: 1.6em;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1;
+}
+
+.card-score-max {
+    font-size: 0.8em;
+    color: #aaa;
+    font-weight: 400;
+}
+
+/* ── Score bar ──────────────────────────────────────────────────── */
+
+.score-bar {
+    height: 22px;
+    background: #eee;
+    border-radius: 11px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.score-fill {
     height: 100%;
     background: linear-gradient(90deg, #27ae60, #f1c40f, #e67e22, #c0392b);
-    border-radius: 12px;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     padding-right: 10px;
-    transition: width 0.4s ease;
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
     min-width: fit-content;
 }
 
-.hybrid-score-text {
+.score-fill-text {
     color: #fff;
     font-weight: 700;
-    font-size: 0.8em;
+    font-size: 0.75em;
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     white-space: nowrap;
 }
 
-.score-detail {
-    font-size: 0.95em;
-    color: #444;
-    margin: 6px 0;
+/* ── Card meta row ─────────────────────────────────────────────── */
+
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
-.rules-score {
-    color: #555;
-    font-size: 0.9em;
-    margin: 4px 0 10px;
+.card-tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 700;
+    letter-spacing: 0.3px;
 }
 
-.condition-card h4 {
-    margin: 10px 0 4px;
+.tag--detected  { background: #fdecea; color: #922b21; }
+.tag--none      { background: #f0f0f0; color: #888; font-style: italic; }
+
+.card-criteria {
+    font-size: 0.82em;
+    color: #777;
+}
+
+/* ── Expandable details (accordion) ────────────────────────────── */
+
+.card-details {
+    font-size: 0.88em;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+}
+
+.details-summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #888;
+    font-weight: 500;
+    padding: 4px 0;
+    user-select: none;
+    transition: color 0.15s ease;
+}
+
+.details-summary:hover {
+    color: #c0392b;
+}
+
+.details-summary::-webkit-details-marker {
+    display: none;
+}
+
+.details-summary::marker {
+    display: none;
+    content: '';
+}
+
+.chevron {
+    display: inline-block;
+    font-size: 0.7em;
+    transition: transform 0.25s ease;
+    color: inherit;
+}
+
+details[open] .chevron {
+    transform: rotate(90deg);
+}
+
+.details-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+
+details[open] .details-body {
+    max-height: 3000px;
+    opacity: 1;
+}
+
+/* ── Detail sections inside accordion ──────────────────────────── */
+
+.detail-section {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.detail-section:first-child {
+    margin-top: 10px;
+    border-top: none;
+    padding-top: 0;
+}
+
+.detail-title {
+    margin: 0 0 6px;
     font-size: 0.9em;
+    font-weight: 600;
     color: #333;
 }
 
-.ml-details {
-    margin-top: 12px;
-    font-size: 0.9em;
+.detail-list {
+    margin: 0;
+    padding-left: 18px;
     color: #555;
+    line-height: 1.6;
 }
 
-.ml-details summary {
-    cursor: pointer;
-    color: #c0392b;
-    font-weight: 500;
+.detail-list li {
+    margin-bottom: 4px;
 }
 
-.ml-details summary:hover {
-    text-decoration: underline;
+.detail-text {
+    margin: 0;
+    color: #555;
+    line-height: 1.6;
 }
 
-.ml-details p {
+.detail-text--warn {
+    color: #856404;
+    background: #fff3cd;
+    padding: 8px 10px;
+    border-radius: 6px;
+}
+
+.detail-empty {
+    color: #aaa;
+    font-style: italic;
+    margin: 0;
+}
+
+.detail-footnote {
+    margin: 8px 0 0;
+    font-size: 0.85em;
+    color: #aaa;
+    font-style: italic;
+}
+
+/* ── Sub-bars inside ML contribution section ───────────────────── */
+
+.detail-bar-wrap {
+    margin-top: 8px;
+}
+
+.detail-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 3px;
+}
+
+.detail-bar-track {
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.detail-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+.detail-bar-fill--ml {
+    background: linear-gradient(90deg, #3498db, #2980b9);
+}
+
+.detail-bar-fill--boost {
+    background: linear-gradient(90deg, #e67e22, #d35400);
+}
+
+/* ── ClinVar significance pills ────────────────────────────────── */
+
+.sig-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
     margin: 6px 0;
 }
 
-.condition-card .no-reasons {
-    color: #888;
-    font-style: italic;
-    font-size: 0.9em;
-}
-
-/* --- Results page: ClinVar variant data (Module 2) --- */
-
-.clinvar-data {
-    margin-top: 14px;
-    font-size: 0.9em;
-    color: #444;
-    border-top: 1px solid #eee;
-    padding-top: 10px;
-}
-
-.clinvar-data summary {
-    cursor: pointer;
-    color: #c0392b;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.clinvar-data summary:hover {
-    text-decoration: underline;
-}
-
-.clinvar-badge {
-    display: inline-block;
-    background: #e8e8e8;
-    color: #555;
-    font-size: 0.75em;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 10px;
-}
-
-.clinvar-summary {
-    margin: 10px 0;
-    color: #555;
-}
-
-.clinvar-breakdown {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 8px 0;
-}
-
-.clinvar-bucket {
+.sig-pill {
     background: #f0f0f0;
     padding: 3px 10px;
     border-radius: 12px;
     font-size: 0.85em;
-    color: #444;
+    color: #555;
 }
 
-.clinvar-count {
-    font-weight: 700;
-    color: #1a1a1a;
+/* ── ClinVar variant list (nested details) ─────────────────────── */
+
+.variant-list-details {
+    margin: 6px 0;
 }
 
-.clinvar-variants {
+.variant-list-summary {
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #c0392b;
+    font-weight: 500;
+    user-select: none;
+}
+
+.variant-list-summary::-webkit-details-marker {
+    display: none;
+}
+
+.variant-list-summary::marker {
+    display: none;
+    content: '';
+}
+
+.variant-grid {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin: 8px 0;
+    gap: 6px;
+    margin-top: 8px;
 }
 
-.clinvar-variant {
+.variant-item {
     background: #fafafa;
     border: 1px solid #eee;
     border-left: 3px solid #c0392b;
     border-radius: 4px;
-    padding: 8px 12px;
+    padding: 6px 10px;
 }
 
-.clinvar-variant-title {
+.variant-title {
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 0.85em;
     color: #1a1a1a;
     word-break: break-all;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
-.clinvar-variant-meta {
+.variant-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    font-size: 0.85em;
-    color: #666;
+    gap: 6px;
+    font-size: 0.82em;
+    color: #777;
 }
 
-.clinvar-sig {
+.variant-sig {
     display: inline-block;
-    padding: 1px 8px;
+    padding: 1px 7px;
     border-radius: 10px;
     font-weight: 600;
     font-size: 0.85em;
 }
 
-.clinvar-sig--pathogenic {
+.variant-sig--pathogenic {
     background: #f8d7da;
     color: #721c24;
 }
 
-.clinvar-sig--likely_pathogenic {
+.variant-sig--likely_pathogenic {
     background: #fdecea;
     color: #922b21;
 }
 
-.clinvar-note {
-    margin: 10px 0 4px;
-    color: #888;
-    font-style: italic;
-    font-size: 0.85em;
+/* ── Responsive (results page) ─────────────────────────────────── */
+
+@media (max-width: 600px) {
+    .overview-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .overview-pct {
+        font-size: 1.6em;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
 }
 
-.clinvar-note--warn {
-    color: #856404;
-    background: #fff3cd;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-style: normal;
-}
-
-/* --- Loading Screen Overlay --- */
+/* ==================================================================
+   4. Loading screen overlay
+   ================================================================== */
 
 .loading-overlay {
     position: fixed;
@@ -607,17 +793,3 @@ legend {
 .loading-bar.bar-3 { transition-delay: 0.04s; }
 .loading-bar.bar-4 { transition-delay: 0.06s; }
 .loading-bar.bar-5 { transition-delay: 0.08s; }
-
-/* --- Responsive tweaks --- */
-
-@media (max-width: 600px) {
-    .risk-meter {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-
-    .risk-probability {
-        font-size: 1.4em;
-    }
-}

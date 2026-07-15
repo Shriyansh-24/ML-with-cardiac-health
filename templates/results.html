@@ -1,206 +1,230 @@
 {% extends "base.html" %}
 
-{#
-   results.html — Combined ML + rules risk report (Step 4).
-
-   This page now shows three layers of risk information per condition:
-
-   1. An ML overview banner at the top — the model's predicted 10-year
-      CHD risk probability and plain-English risk level.
-
-   2. For each condition card, a hybrid ML + rules score (0-100) that
-      combines the model's CHD prediction with condition-specific boosts
-      for family history, symptoms, and genetic variants the model was
-      never trained on.
-
-   3. The rules-based discrete criteria score (out of 3) with detailed
-      plain-English reasons for each criterion matched.
-
-   Template variables:
-       ml_assessments (list[dict]): Hybrid assessments from predictor.py
-       global_risk_level (str): "Low", "Moderate", "Elevated", or "High"
-       global_probability (float): Raw CHD probability from the model
-       clinvar_data (dict): ClinVar variant data for MYH7 (from clinvar_api.py)
-#}
+{# ── Card layout: 2-column grid on wide screens, single column on mobile ── #}
 
 {% block title %}CardioGenome — Your Risk Report{% endblock %}
 
 {% block content %}
 
-    {# Threshold at which the risk flag badge appears (20% CHD probability) #}
-    {% set FLAG_THRESHOLD = 20 %}
+{% set FLAG_THRESHOLD = 20 %}
 
-    {# ── ML Overview Banner ───────────────────────────────────────────── #}
-    <section class="ml-overview">
-        <h2>Your ML-predicted cardiac risk overview</h2>
+{# ── Helper: tag for whether condition-specific factors exist ───────── #}
+{% macro risk_factors_tag(boosts, rules_reasons) %}
+  {%- if boosts or rules_reasons -%}
+    <span class="card-tag tag--detected">Additional factors detected</span>
+  {%- else -%}
+    <span class="card-tag tag--none">No additional factors</span>
+  {%- endif -%}
+{% endmacro %}
 
-        <div class="risk-meter">
-            <span class="risk-level risk-level--{{ global_risk_level | lower | replace('-', '_') }}">
-                {{ global_risk_level }}
-            </span>
-            <span class="risk-probability">
-                {{ "%.1f" | format(global_probability * 100) }}%
-                <span class="risk-label">10-year CHD probability</span>
-            </span>
-            {% if global_probability * 100 >= FLAG_THRESHOLD %}
-            <span class="risk-flag" title="CHD probability is at or above the {{ FLAG_THRESHOLD }}% flag threshold">
-                ⚠ FLAGGED
-            </span>
-            {% endif %}
-        </div>
+{# ── Helper: card border color based on whether factors exist ──────── #}
+{% macro card_border_mod(boosts, rules_reasons) %}
+  {%- if boosts or rules_reasons %}detected{% else %}none{% endif -%}
+{% endmacro %}
 
-        <p class="disclaimer-inline">
-            This ML prediction is based on a Random Forest trained on the
-            Framingham Heart Study (4,189 patients) using your age, sex,
-            blood pressure, cholesterol, and heart rate. The model captures
-            patterns in these continuous features but cannot see family
-            history or genetic data — those are added as condition-specific
-            boosts below. This is an educational tool, not a diagnosis.
-        </p>
-    </section>
+{# ═══════════════════════ Top Risk Overview ═══════════════════════════ #}
+<section class="overview-card">
+  <h2 class="overview-title">Your Cardiac Risk Overview</h2>
 
-    {# ── Condition Cards ──────────────────────────────────────────────── #}
-    <h2>Condition-by-condition breakdown</h2>
+  <div class="overview-row">
+    <span class="overview-badge overview-badge--{{ global_risk_level | lower | replace('-', '_') }}">
+      {{ global_risk_level }}
+    </span>
+    <span class="overview-pct">{{ "%.1f" | format(global_probability * 100) }}%</span>
+    <span class="overview-label">10-year CHD probability</span>
+    {% if global_probability * 100 >= FLAG_THRESHOLD %}
+    <span class="flag-badge">⚠ Flagged</span>
+    {% endif %}
+  </div>
 
-    <ol class="condition-list">
-        {% for assessment in ml_assessments %}
-        <li class="condition-card">
-            <h3>{{ assessment.full_name }} ({{ assessment.condition }})</h3>
+  <p class="overview-note">
+    Based on your age, sex, blood pressure, cholesterol, and heart rate
+    across <strong>4,189 Framingham Heart Study patients</strong>.
+  </p>
+</section>
 
-            {# Hybrid score bar #}
-            <div class="hybrid-score-bar">
-                <div class="hybrid-score-fill" style="width: {{ "%.3f" | format(assessment.hybrid_score) }}%;">
-                    <span class="hybrid-score-text">{{ "%.3f" | format(assessment.hybrid_score) }}/100</span>
-                </div>
+{# ═══════════════════ Condition Cards ═══════════════════════════════ #}
+<h2 class="section-heading">Condition-by-condition breakdown</h2>
+
+<ol class="card-list">
+  {% for item in ml_assessments %}
+  <li class="card card--{{ card_border_mod(item.boosts, item.rules_reasons) }}">
+
+    {# ── Card header: title + score badge + genes ── #}
+    <div class="card-header">
+      <div class="card-title-group">
+        <h3 class="card-title">{{ item.full_name }}</h3>
+        <span class="card-code">{{ item.condition }}</span>
+      </div>
+      <div class="card-score-wrap">
+        <span class="card-score-num">{{ "%.1f" | format(item.hybrid_score) }}</span>
+        <span class="card-score-max">/100</span>
+      </div>
+    </div>
+
+    {# ── Score bar (animates in on load) ── #}
+    <div class="score-bar">
+      <div
+        class="score-fill"
+        data-width="{{ item.hybrid_score }}"
+        style="width: 0%;"
+      >
+        <span class="score-fill-text">{{ "%.1f" | format(item.hybrid_score) }}/100</span>
+      </div>
+    </div>
+
+    <div class="card-meta">
+      {{ risk_factors_tag(item.boosts, item.rules_reasons) }}
+      <span class="card-criteria">
+        <strong>{{ item.rules_score }}/{{ item.rules_max_score }}</strong> clinical criteria matched
+      </span>
+    </div>
+
+    {# ── Expandable details (single accordion) ── #}
+    <details class="card-details">
+      <summary class="details-summary">
+        <span class="details-summary-text">View full analysis</span>
+        <span class="chevron">▶</span>
+      </summary>
+      <div class="details-body">
+
+        {# ── Contributing factors ── #}
+        {% if item.boosts %}
+        <section class="detail-section">
+          <h4 class="detail-title">⚡ Factors that raised this score</h4>
+          <ul class="detail-list">
+            {% for boost in item.boosts %}
+            <li>{{ boost }}</li>
+            {% endfor %}
+          </ul>
+        </section>
+        {% endif %}
+
+        {# ── Clinical criteria matched ── #}
+        {% if item.rules_reasons %}
+        <section class="detail-section">
+          <h4 class="detail-title">✓ Clinical criteria matched</h4>
+          <ul class="detail-list">
+            {% for reason in item.rules_reasons %}
+            <li>{{ reason }}</li>
+            {% endfor %}
+          </ul>
+        </section>
+        {% else %}
+        <section class="detail-section">
+          <h4 class="detail-title">✓ Clinical criteria</h4>
+          <p class="detail-empty">No simplified criteria were matched.</p>
+        </section>
+        {% endif %}
+
+        {# ── ML model contribution ── #}
+        <section class="detail-section">
+          <h4 class="detail-title">📊 ML model contribution</h4>
+          <p class="detail-text">
+            The Random Forest predicted a
+            <strong>{{ "%.1f" | format(global_probability * 100) }}%</strong>
+            10-year CHD probability from your vitals. This contributed
+            <strong>{{ item.ml_base_score }}</strong> of the
+            <strong>{{ "%.1f" | format(item.hybrid_score) }}</strong> points.
+          </p>
+          <div class="detail-bar-wrap">
+            <div class="detail-bar-label">
+              <span>ML base</span>
+              <span>{{ item.ml_base_score }}/40</span>
             </div>
+            <div class="detail-bar-track">
+              <div class="detail-bar-fill detail-bar-fill--ml" style="width: {{ (item.ml_base_score / 40 * 100) | round(1) }}%;"></div>
+            </div>
+          </div>
+          <div class="detail-bar-wrap">
+            <div class="detail-bar-label">
+              <span>Rules boosts</span>
+              <span>{{ (item.hybrid_score - item.ml_base_score) | round(1) }}/60</span>
+            </div>
+            <div class="detail-bar-track">
+              <div class="detail-bar-fill detail-bar-fill--boost" style="width: {{ ((item.hybrid_score - item.ml_base_score) / 60 * 100) | round(1) }}%;"></div>
+            </div>
+          </div>
+        </section>
 
-            <p class="score-detail">
-                <strong>{{ "%.3f" | format(assessment.hybrid_score) }}/100</strong> combined risk score
-                — <strong>{{ assessment.ml_base_score }}/40</strong> from ML model
-                + <strong>{{ (assessment.hybrid_score - assessment.ml_base_score) | round(3) }}</strong>
-                from rules-based boosts
-            </p>
-
-            {# Rules-based criteria #}
-            <p class="rules-score">
-                Matched <strong>{{ assessment.rules_score }}</strong> of
-                <strong>{{ assessment.rules_max_score }}</strong> simplified
-                clinical risk criteria
-            </p>
-
-            {# Boosts from the hybrid predictor #}
-            {% if assessment.boosts %}
-            <h4>Why this score was boosted</h4>
-            <ul class="reasons">
-                {% for boost in assessment.boosts %}
-                <li>{{ boost }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-
-            {# Rules-based reasons #}
-            {% if assessment.rules_reasons %}
-            <h4>Clinical criteria matched</h4>
-            <ul class="reasons">
-                {% for reason in assessment.rules_reasons %}
-                <li>{{ reason }}</li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="no-reasons">None of the simplified clinical criteria were matched.</p>
-            {% endif %}
-
-            <p class="genes">Associated genes: {{ assessment.genes | join(", ") }}</p>
-
-            {# ── ClinVar variant data (Module 2) ───────────────────── #}
-            {% if assessment.condition == "HCM" and clinvar_data and not clinvar_data.error %}
-            <details class="clinvar-data">
-                <summary>
-                    Gene variant data from ClinVar
-                    <span class="clinvar-badge">{{ clinvar_data.total_variants }} variants</span>
-                </summary>
-
-                <p class="clinvar-summary">
-                    The NCBI ClinVar database contains
-                    <strong>{{ clinvar_data.total_variants }}</strong>
-                    submitted variants for the
-                    <strong>{{ clinvar_data.gene }}</strong> gene.
-                    Below is a breakdown of the most recent
-                    {{ clinvar_data.notable_variants | length }} pathogenic
-                    and likely-pathogenic variants.
-                </p>
-
-                {# Significance breakdown #}
-                {% if clinvar_data.summary_by_significance %}
-                <h4>Clinical significance breakdown</h4>
-                <ul class="clinvar-breakdown">
-                    {% for bucket, count in clinvar_data.summary_by_significance.items() %}
-                    <li>
-                        <span class="clinvar-bucket">{{ bucket }}</span>
-                        <span class="clinvar-count">{{ count }}</span>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-
-                {# Notable variants #}
-                {% if clinvar_data.notable_variants %}
-                <h4>Notable pathogenic / likely-pathogenic variants</h4>
-                <div class="clinvar-variants">
-                    {% for variant in clinvar_data.notable_variants %}
-                    <div class="clinvar-variant">
-                        <div class="clinvar-variant-title">{{ variant.title }}</div>
-                        <div class="clinvar-variant-meta">
-                            <span class="clinvar-sig clinvar-sig--{{ variant.clinical_significance | lower | replace(' ', '_') }}">
-                                {{ variant.clinical_significance }}
-                            </span>
-                            <span>{{ variant.variant_type }}</span>
-                            <span>{{ variant.condition }}</span>
-                            {% if variant.protein_change and variant.protein_change != '—' %}
-                            <span>Protein: {{ variant.protein_change }}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
+        {# ── ClinVar genetic data (HCM only) ── #}
+        {% if item.condition == "HCM" and clinvar_data and not clinvar_data.error %}
+        <section class="detail-section">
+          <h4 class="detail-title">🧬 Genetic variant data</h4>
+          <p class="detail-text">
+            The NCBI ClinVar database has
+            <strong>{{ clinvar_data.total_variants }}</strong> variants for
+            <strong>{{ clinvar_data.gene }}</strong>.
+          </p>
+          {% if clinvar_data.summary_by_significance %}
+          <div class="sig-pills">
+            {% for bucket, count in clinvar_data.summary_by_significance.items() %}
+            <span class="sig-pill">{{ bucket }}: <strong>{{ count }}</strong></span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if clinvar_data.notable_variants %}
+          <details class="variant-list-details">
+            <summary class="variant-list-summary">
+              Notable pathogenic variants <span class="chevron">▶</span>
+            </summary>
+            <div class="variant-grid">
+              {% for variant in clinvar_data.notable_variants[:6] %}
+              <div class="variant-item">
+                <div class="variant-title">{{ variant.title }}</div>
+                <div class="variant-meta">
+                  <span class="variant-sig variant-sig--{{ variant.clinical_significance | lower | replace(' ', '_') }}">
+                    {{ variant.clinical_significance }}
+                  </span>
+                  <span>{{ variant.variant_type }}</span>
+                  {% if variant.protein_change and variant.protein_change != '—' %}
+                  <span>{{ variant.protein_change }}</span>
+                  {% endif %}
                 </div>
-                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </details>
+          {% endif %}
+          <p class="detail-footnote">
+            Source: NCBI ClinVar · {{ clinvar_data.fetched_at.split('T')[0] }}
+          </p>
+        </section>
+        {% elif item.condition == "HCM" and clinvar_data.error %}
+        <section class="detail-section">
+          <h4 class="detail-title">🧬 Genetic variant data</h4>
+          <p class="detail-text detail-text--warn">
+            ClinVar data unavailable: {{ clinvar_data.error }}
+          </p>
+        </section>
+        {% endif %}
 
-                <p class="clinvar-note">
-                    Data fetched from NCBI ClinVar on
-                    {{ clinvar_data.fetched_at.split('T')[0] }}.
-                    This is a sample of the most recent variants — not an
-                    exhaustive list. Always consult a clinician for
-                    interpretation of genetic test results.
-                </p>
-            </details>
-            {% elif clinvar_data.error %}
-            <details class="clinvar-data">
-                <summary>Gene variant data (unavailable)</summary>
-                <p class="clinvar-note clinvar-note--warn">
-                    Could not fetch ClinVar data: {{ clinvar_data.error }}
-                </p>
-            </details>
-            {% endif %}
+        {# ── Associated genes ── #}
+        <section class="detail-section">
+          <h4 class="detail-title">🧬 Associated genes</h4>
+          <p class="detail-text">{{ item.genes | join(", ") }}</p>
+        </section>
 
-            {# ML details expandable #}
-            <details class="ml-details">
-                <summary>How the ML model scored this</summary>
-                <p>
-                    The Random Forest model predicted a
-                    <strong>{{ "%.1f" | format(global_probability * 100) }}%</strong>
-                    probability of 10-year CHD for someone with your age, sex,
-                    blood pressure, cholesterol, and heart rate. This contributed
-                    <strong>{{ assessment.ml_base_score }}</strong> points to the
-                    {{ assessment.condition }} score (out of a maximum of 40).
-                </p>
-                <p>
-                    The remaining points come from condition-specific factors the
-                    model never saw during training — family history, symptoms, and
-                    genetic variants — applied as clinical rules above.
-                </p>
-            </details>
-        </li>
-        {% endfor %}
-    </ol>
+      </div>{# /details-body #}
+    </details>
+  </li>
+  {% endfor %}
+</ol>
+
+{# ── Score bar animation (runs once on page load) ── #}
+<script>
+(function() {
+  var bars = document.querySelectorAll('.score-fill');
+  if (!bars.length) return;
+  // Small delay lets the browser paint the initial 0% width first,
+  // then the CSS transition animates to the target width.
+  setTimeout(function() {
+    bars.forEach(function(bar) {
+      var w = bar.getAttribute('data-width');
+      if (w) { bar.style.width = parseFloat(w) + '%'; }
+    });
+  }, 80);
+})();
+</script>
 
 {% endblock %}
