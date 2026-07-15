@@ -31,6 +31,10 @@ Then visit `http://127.0.0.1:5000`.
       (`services/clinvar_api.py` — fetches real MYH7 variant data from NCBI E-utilities;
       displays total variant count, clinical significance breakdown, and notable variants
       in an expandable section on the HCM condition card)
+- [x] Step 7 — Module 3: gene editing research dataset + display
+      (`data/gene_editing.json` — static dataset with CRISPR, base editing, and gene
+      therapy approaches for HCM, LQTS, and FH; displayed in a segregated "Advanced:
+      Gene Editing Research" toggle at the bottom of the results page)
 
 ### Additional UI/UX enhancements
 
@@ -48,7 +52,6 @@ Then visit `http://127.0.0.1:5000`.
 
 **What's next:**
 - [ ] Step 6 — Module 2: GWAS Catalog + remaining genes
-- [ ] Step 7 — Module 3: gene editing research dataset + display
 - [ ] Step 8 — Module 4: equity dataset + Plotly visualisation
 - [ ] Step 9 — Combined results page
 
@@ -66,6 +69,8 @@ cardiogenome/
 │   ├── risk_profiler.py    # Module 1: rules-based scoring (0-3 per condition)
 │   ├── predictor.py        # Step 4: hybrid ML + rules predictor (0-100 per condition)
 │   └── clinvar_api.py      # Module 2: ClinVar E-utilities fetcher (MYH7 variant data)
+├── data/                   # Static datasets
+│   └── gene_editing.json   # Module 3: gene editing research (CRISPR, base editing, etc.)
 ├── templates/              # Jinja2 templates (base/index/results)
 │   ├── base.html           # Shared HTML shell
 │   ├── index.html          # Full intake form (15+ fields across 5 fieldsets)
