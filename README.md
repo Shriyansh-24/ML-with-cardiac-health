@@ -32,6 +32,20 @@ Then visit `http://127.0.0.1:5000`.
       displays total variant count, clinical significance breakdown, and notable variants
       in an expandable section on the HCM condition card)
 
+### Additional UI/UX enhancements
+
+- **Results page redesign** — moved from a dense single-column layout to a clean
+  2-column card grid with animated score bars, a compact ML overview card, and a
+  single accordion per condition that groups all supporting data (boost factors,
+  clinical criteria, ML contribution, genetic variant data).
+- **Loading screen** — full-screen overlay with animated heart SVG, pulse rings,
+  bouncing dots, cycling status text, and progress bars that appears on form
+  submission.
+- **Risk label fix** — replaced confusing Low/Moderate/High/risk labels on condition
+  cards with clear "No additional factors" / "Additional factors detected" tags that
+  accurately reflect whether condition-specific evidence (family history, symptoms,
+  genetic variants) was found.
+
 **What's next:**
 - [ ] Step 6 — Module 2: GWAS Catalog + remaining genes
 - [ ] Step 7 — Module 3: gene editing research dataset + display
