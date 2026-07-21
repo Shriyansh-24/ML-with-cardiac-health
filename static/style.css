@@ -973,3 +973,56 @@ details[open] .research-body {
 .loading-bar.bar-3 { transition-delay: 0.04s; }
 .loading-bar.bar-4 { transition-delay: 0.06s; }
 .loading-bar.bar-5 { transition-delay: 0.08s; }
+
+/* ── GWAS Catalog association items ─────────────────────────────── */
+
+.gwas-item {
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-left: 3px solid #2980b9;
+    border-radius: 4px;
+    padding: 6px 10px;
+}
+
+.gwas-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.gwas-rsid {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-weight: 600;
+    font-size: 0.88em;
+    color: #1a1a1a;
+}
+
+.gwas-pvalue {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.82em;
+    color: #c0392b;
+    font-weight: 600;
+}
+
+.gwas-item-detail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.82em;
+    color: #555;
+}
+
+.gwas-trait {
+    font-weight: 500;
+    color: #333;
+}
+
+.gwas-allele {
+    color: #666;
+}
+
+.gwas-or {
+    color: #666;
+}

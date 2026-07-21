@@ -21,7 +21,7 @@ from flask import Flask, render_template, request
 import json
 import os
 
-from services import risk_profiler, predictor, clinvar_api
+from services import risk_profiler, predictor, clinvar_api, gwas_api
 from services.risk_profiler import FormParsingError
 
 app = Flask(__name__)
@@ -79,6 +79,9 @@ def results() -> str:
     # Module 2: fetch real ClinVar variant data for MYH7 (HCM-associated gene)
     clinvar_data = clinvar_api.fetch_gene_variants("MYH7")
 
+    # Step 6: fetch GWAS Catalog associations for LQTS and FH genes
+    gwas_data = gwas_api.fetch_all_condition_associations()
+
     # Module 3: load static gene editing research dataset
     editing_path = os.path.join(os.path.dirname(__file__), "data", "gene_editing.json")
     if os.path.exists(editing_path):
@@ -99,6 +102,7 @@ def results() -> str:
         global_risk_level=global_chd["ml_risk_level"] if global_chd else "Unknown",
         global_probability=global_chd["ml_probability"] if global_chd else 0,
         clinvar_data=clinvar_data,
+        gwas_data=gwas_data,
         gene_editing=gene_editing_data,
     )
 

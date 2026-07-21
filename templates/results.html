@@ -199,6 +199,67 @@
         </section>
         {% endif %}
 
+        {# ── GWAS Catalog data (LQTS and FH) ── #}
+        {% set condition_gwas = gwas_data.get(item.condition) %}
+        {% if item.condition in ("LQTS", "FH") and condition_gwas and not condition_gwas.error %}
+        <section class="detail-section">
+          <h4 class="detail-title">🧬 GWAS Catalog associations</h4>
+          <p class="detail-text">
+            The GWAS Catalog lists
+            <strong>{{ condition_gwas.total_associations }}</strong> associations
+            across <strong>{{ condition_gwas.genes | join(", ") }}</strong>.
+          </p>
+          {% if condition_gwas.summary_by_trait %}
+          <div class="sig-pills">
+            {% for trait, count in condition_gwas.summary_by_trait.items() %}
+            <span class="sig-pill">{{ trait }}: <strong>{{ count }}</strong></span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if condition_gwas.notable_associations %}
+          <details class="variant-list-details">
+            <summary class="variant-list-summary">
+              Most significant associations <span class="chevron">▶</span>
+            </summary>
+            <div class="variant-grid">
+              {% for assoc in condition_gwas.notable_associations %}
+              <div class="gwas-item">
+                <div class="gwas-item-header">
+                  <span class="gwas-rsid">{{ assoc.rs_id }}</span>
+                  <span class="gwas-pvalue">p = {{ assoc.p_value_formatted }}</span>
+                </div>
+                <div class="gwas-item-detail">
+                  <span class="gwas-trait">{{ assoc.trait }}</span>
+                  {% if assoc.risk_allele and assoc.risk_allele != '—' %}
+                  <span class="gwas-allele">Risk allele: <strong>{{ assoc.risk_allele }}</strong></span>
+                  {% endif %}
+                  {% if assoc.effect_size %}
+                  <span class="gwas-or">β/OR = {{ assoc.effect_size_formatted }}</span>
+                  {% endif %}
+                </div>
+                {% if assoc.reported_genes %}
+                <div class="variant-meta" style="margin-top: 4px;">
+                  <span>Reported genes: {{ assoc.reported_genes | join(", ") }}</span>
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </details>
+          {% endif %}
+          <p class="detail-footnote">
+            Source: EMBL-EBI GWAS Catalog · {{ condition_gwas.fetched_at.split('T')[0] }}
+          </p>
+        </section>
+        {% elif item.condition in ("LQTS", "FH") and condition_gwas and condition_gwas.error %}
+        <section class="detail-section">
+          <h4 class="detail-title">🧬 GWAS Catalog associations</h4>
+          <p class="detail-text detail-text--warn">
+            GWAS data unavailable: {{ condition_gwas.error }}
+          </p>
+        </section>
+        {% endif %}
+
         {# ── Associated genes ── #}
         <section class="detail-section">
           <h4 class="detail-title">🧬 Associated genes</h4>

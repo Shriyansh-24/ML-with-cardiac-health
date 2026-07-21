@@ -31,6 +31,11 @@ Then visit `http://127.0.0.1:5000`.
       (`services/clinvar_api.py` — fetches real MYH7 variant data from NCBI E-utilities;
       displays total variant count, clinical significance breakdown, and notable variants
       in an expandable section on the HCM condition card)
+- [x] Step 6 — Module 2 extension: GWAS Catalog + remaining genes
+      (`services/gwas_api.py` — fetches real gene-disease associations from the EMBL-EBI
+      GWAS Catalog API v2 for LQTS genes (KCNQ1, KCNH2, SCN5A) and FH genes (LDLR, APOB);
+      displays total associations, trait summary pills, and expandable notable-variant list
+      with rsID, p-value, risk allele, and effect size on LQTS and FH condition cards)
 - [x] Step 7 — Module 3: gene editing research dataset + display
       (`data/gene_editing.json` — static dataset with CRISPR, base editing, and gene
       therapy approaches for HCM, LQTS, and FH; displayed in a segregated "Advanced:
@@ -51,7 +56,6 @@ Then visit `http://127.0.0.1:5000`.
   genetic variants) was found.
 
 **What's next:**
-- [ ] Step 6 — Module 2: GWAS Catalog + remaining genes
 - [ ] Step 8 — Module 4: equity dataset + Plotly visualisation
 - [ ] Step 9 — Combined results page
 
@@ -68,7 +72,8 @@ cardiogenome/
 ├── services/               # Business logic: risk rules, ML inference, API calls
 │   ├── risk_profiler.py    # Module 1: rules-based scoring (0-3 per condition)
 │   ├── predictor.py        # Step 4: hybrid ML + rules predictor (0-100 per condition)
-│   └── clinvar_api.py      # Module 2: ClinVar E-utilities fetcher (MYH7 variant data)
+│   ├── clinvar_api.py      # Module 2: ClinVar E-utilities fetcher (MYH7 variant data)
+│   └── gwas_api.py         # Step 6: GWAS Catalog v2 associations fetcher (LQTS & FH genes)
 ├── data/                   # Static datasets
 │   └── gene_editing.json   # Module 3: gene editing research (CRISPR, base editing, etc.)
 ├── templates/              # Jinja2 templates (base/index/results)
