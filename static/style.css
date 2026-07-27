@@ -463,6 +463,15 @@ details[open] .details-body {
     margin: 0;
 }
 
+/* ── Section subtitle ─────────────────────────────────────────── */
+
+.section-sub {
+    font-size: 0.85em;
+    color: #888;
+    margin: -12px 0 20px;
+    line-height: 1.5;
+}
+
 .detail-footnote {
     margin: 8px 0 0;
     font-size: 0.85em;
@@ -702,6 +711,19 @@ details[open] .research-body {
     color: #555;
 }
 
+.pill--trait {
+    background: #eaf2f8;
+    color: #2c3e50;
+    border: 1px solid #d6e4f0;
+}
+
+.pill--more {
+    background: transparent;
+    color: #888;
+    font-style: italic;
+    font-size: 0.8em;
+}
+
 /* ── ClinVar variant list (nested details) ─────────────────────── */
 
 .variant-list-details {
@@ -774,6 +796,34 @@ details[open] .research-body {
     color: #922b21;
 }
 
+/* ── Gene chips (associated genes) ────────────────────────────── */
+
+.gene-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.gene-chip {
+    display: inline-block;
+    background: #f0f0f0;
+    border: 1px solid #e0e0e0;
+    padding: 3px 12px;
+    border-radius: 14px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.82em;
+    color: #333;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.gene-chip:hover {
+    background: #e8e8e8;
+    border-color: #ccc;
+}
+
 /* ── Responsive (results page) ─────────────────────────────────── */
 
 @media (max-width: 600px) {
@@ -787,10 +837,49 @@ details[open] .research-body {
         font-size: 1.6em;
     }
 
+    .overview-card {
+        padding: 16px 18px;
+    }
+
+    .card-list {
+        gap: 14px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
     .card-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 6px;
+    }
+
+    .card-score-num {
+        font-size: 1.3em;
+    }
+
+    .card-meta {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .card-criteria {
+        font-size: 0.78em;
+    }
+
+    .sig-pills {
+        gap: 4px;
+    }
+
+    .sig-pill,
+    .pill--trait {
+        font-size: 0.75em;
+        padding: 2px 7px;
+    }
+
+    .research-section {
+        padding: 12px 14px;
     }
 }
 

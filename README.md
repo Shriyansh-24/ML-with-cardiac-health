@@ -57,8 +57,14 @@ Then visit `http://127.0.0.1:5000`.
 
 **What's next:**
 - [ ] Step 8 — Module 4: equity dataset + Plotly visualisation
-- [ ] Step 9 — Combined results page
 
+## Completed steps
+
+- [x] Step 9 — Final integration polish
+      (Review and refine the combined results page: GWAS trait pills limited to top 8
+      with '+X more' badge; associated genes displayed as individual chip tags with
+      context sentence; responsive mobile breakpoints added for all card sections;
+      section heading subtitle added to orient users on the hybrid ML + rules model)
 ## Project structure
 
 ```
