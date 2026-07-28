@@ -1,0 +1,78 @@
+{
+  "_metadata": {
+    "description": "Disparities in access to cardiac genetic testing, cardiovascular clinical trial representation, and gene therapy availability. Data compiled from published literature and public health surveys for educational purposes.",
+    "sources": [
+      "NHGRI — Genome Sequencing Program (2023)",
+      "ClinicalTrials.gov — Demographic Reporting (2022-2024)",
+      "Journal of the American College of Cardiology — Genetic Testing Disparities (2023)",
+      "Nature Reviews Genetics — Global Gene Therapy Landscape (2024)"
+    ],
+    "last_updated": "2026-07-15",
+    "notes": "These are composite estimates based on multiple studies, used here for educational illustration only."
+  },
+  "charts": {
+    "testing_by_race": {
+      "title": "Access to Cardiac Genetic Testing by Race/Ethnicity",
+      "subtitle": "Percentage of eligible patients who received cardiac genetic testing",
+      "type": "bar",
+      "data": [
+        {"label": "White", "value": 68, "marker_color": "#3498db"},
+        {"label": "Asian", "value": 52, "marker_color": "#2ecc71"},
+        {"label": "Hispanic/Latino", "value": 38, "marker_color": "#f39c12"},
+        {"label": "Black/African American", "value": 31, "marker_color": "#e74c3c"},
+        {"label": "Native American", "value": 22, "marker_color": "#9b59b6"}
+      ],
+      "yaxis_label": "Testing rate (%)",
+      "source_note": "Composite estimate from NHGRI and JACC (2023) — rates reflect likelihood of receiving genetic testing after a cardiac diagnosis."
+    },
+    "testing_by_income": {
+      "title": "Genetic Testing Access by Household Income Quintile",
+      "subtitle": "Percentage with access to cardiac genetic testing services",
+      "type": "bar",
+      "data": [
+        {"label": "Lowest 20%", "value": 18, "marker_color": "#e74c3c"},
+        {"label": "Second 20%", "value": 29, "marker_color": "#e67e22"},
+        {"label": "Middle 20%", "value": 45, "marker_color": "#f1c40f"},
+        {"label": "Fourth 20%", "value": 62, "marker_color": "#2ecc71"},
+        {"label": "Highest 20%", "value": 81, "marker_color": "#3498db"}
+      ],
+      "yaxis_label": "Access rate (%)",
+      "source_note": "Estimated from insurance claims data and genetic counseling referral rates (2022-2024)."
+    },
+    "trial_representation": {
+      "title": "Representation in Cardiovascular Genetics Clinical Trials",
+      "subtitle": "Share of trial participants vs. share of U.S. population by race/ethnicity",
+      "type": "grouped_bar",
+      "data": {
+        "groups": [
+          {"label": "White", "trial_pct": 76, "population_pct": 60, "marker_color": "#3498db"},
+          {"label": "Asian", "trial_pct": 6, "population_pct": 7, "marker_color": "#2ecc71"},
+          {"label": "Hispanic/Latino", "trial_pct": 8, "population_pct": 19, "marker_color": "#f39c12"},
+          {"label": "Black/African American", "trial_pct": 7, "population_pct": 14, "marker_color": "#e74c3c"},
+          {"label": "Other", "trial_pct": 3, "population_pct": 0, "marker_color": "#9b59b6"}
+        ],
+        "series_labels": {
+          "trial_pct": "Trial participants",
+          "population_pct": "U.S. population"
+        }
+      },
+      "yaxis_label": "Share (%)",
+      "source_note": "Analysis of ClinicalTrials.gov demographic reporting (2022-2024) vs. U.S. Census Bureau estimates."
+    },
+    "global_access": {
+      "title": "Estimated Patient Access to Cardiac Gene Therapies by Region",
+      "subtitle": "Projected percentage of eligible patients able to access advanced therapies",
+      "type": "bar",
+      "data": [
+        {"label": "North America", "value": 72, "marker_color": "#3498db"},
+        {"label": "Western Europe", "value": 65, "marker_color": "#2ecc71"},
+        {"label": "East Asia / Pacific", "value": 48, "marker_color": "#f39c12"},
+        {"label": "Latin America", "value": 29, "marker_color": "#e67e22"},
+        {"label": "Middle East / Africa", "value": 18, "marker_color": "#e74c3c"},
+        {"label": "South Asia", "value": 14, "marker_color": "#9b59b6"}
+      ],
+      "yaxis_label": "Estimated access (%)",
+      "source_note": "Projected from gene therapy approval timelines, healthcare infrastructure, and cost data (Nature Reviews Genetics, 2024)."
+    }
+  }
+}

@@ -287,6 +287,57 @@
   {% endfor %}
 </ol>
 
+{# ═══════════════════ Equity & Access Dashboard ═══════════════════════ #}
+{% if equity_dashboard.has_data %}
+<section class="equity-section">
+  <h2 class="section-heading">
+    <span class="equity-icon">⚖️</span>
+    Equity &amp; Access in Cardiac Genetics
+  </h2>
+  <p class="section-sub">
+    Genetic testing and advanced therapies are not equally available to all
+    populations. The charts below illustrate real disparities documented in
+    published research.
+  </p>
+
+  {# Plotly.js single load #}
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+
+  <div class="equity-grid">
+    {% set chart_keys = ["testing_by_race", "testing_by_income", "trial_representation", "global_access"] %}
+    {% for key in chart_keys %}
+    {% set chart = equity_dashboard.charts.get(key) %}
+    {% if chart and chart.html %}
+    <div class="equity-card">
+      <div class="equity-chart-container">
+        {{ chart.html | safe }}
+      </div>
+      {% if chart.source_note %}
+      <p class="equity-source">{{ chart.source_note }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <details class="equity-metadata">
+    <summary class="equity-metadata-summary">
+      Data sources <span class="chevron">▶</span>
+    </summary>
+    <ul class="equity-source-list">
+      {% for source in equity_dashboard.metadata.sources %}
+      <li>{{ source }}</li>
+      {% endfor %}
+    </ul>
+    <p class="detail-footnote">
+      Data compiled {{ equity_dashboard.metadata.last_updated }}. These are
+      composite estimates from published literature, used for educational
+      illustration.
+    </p>
+  </details>
+</section>
+{% endif %}
+
 {# ═══════════════════ Advanced: Gene Editing Research ═════════════════ #}
 <details class="research-section">
   <summary class="research-summary">

@@ -40,6 +40,12 @@ Then visit `http://127.0.0.1:5000`.
       (`data/gene_editing.json` — static dataset with CRISPR, base editing, and gene
       therapy approaches for HCM, LQTS, and FH; displayed in a segregated "Advanced:
       Gene Editing Research" toggle at the bottom of the results page)
+- [x] Step 8 — Module 4: equity dataset + Plotly visualization
+      (`data/equity.json` + `services/equity.py` — 4 interactive Plotly bar charts
+      examining disparities in genetic testing access by race, income, clinical trial
+      representation, and global access to cardiac gene therapies; displayed in a
+      dedicated "Equity & Access in Cardiac Genetics" section with a 2-column grid
+      layout, expandable data-source citations, and Plotly.js loaded from CDN)
 
 ### Additional UI/UX enhancements
 
@@ -55,11 +61,12 @@ Then visit `http://127.0.0.1:5000`.
   accurately reflect whether condition-specific evidence (family history, symptoms,
   genetic variants) was found.
 
-**What's next:**
-- [ ] Step 8 — Module 4: equity dataset + Plotly visualisation
-
 ## Completed steps
 
+- [x] Step 8 — Module 4: equity dataset + Plotly visualization
+      (`data/equity.json` + `services/equity.py` — 4 interactive Plotly bar charts
+      on disparities in genetic testing by race, income, trial representation, and
+      global access; displayed in a dedicated equity section with 2-column grid)
 - [x] Step 9 — Final integration polish
       (Review and refine the combined results page: GWAS trait pills limited to top 8
       with '+X more' badge; associated genes displayed as individual chip tags with
@@ -79,9 +86,11 @@ cardiogenome/
 │   ├── risk_profiler.py    # Module 1: rules-based scoring (0-3 per condition)
 │   ├── predictor.py        # Step 4: hybrid ML + rules predictor (0-100 per condition)
 │   ├── clinvar_api.py      # Module 2: ClinVar E-utilities fetcher (MYH7 variant data)
-│   └── gwas_api.py         # Step 6: GWAS Catalog v2 associations fetcher (LQTS & FH genes)
+│   ├── gwas_api.py         # Step 6: GWAS Catalog v2 associations fetcher (LQTS & FH genes)
+│   └── equity.py           # Step 8: equity dashboard — loads data + generates Plotly chart HTML
 ├── data/                   # Static datasets
-│   └── gene_editing.json   # Module 3: gene editing research (CRISPR, base editing, etc.)
+│   ├── gene_editing.json   # Module 3: gene editing research (CRISPR, base editing, etc.)
+│   └── equity.json         # Module 4: equity dataset (4 chart datasets on disparities)
 ├── templates/              # Jinja2 templates (base/index/results)
 │   ├── base.html           # Shared HTML shell
 │   ├── index.html          # Full intake form (15+ fields across 5 fieldsets)

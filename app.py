@@ -21,7 +21,7 @@ from flask import Flask, render_template, request
 import json
 import os
 
-from services import risk_profiler, predictor, clinvar_api, gwas_api
+from services import risk_profiler, predictor, clinvar_api, gwas_api, equity
 from services.risk_profiler import FormParsingError
 
 app = Flask(__name__)
@@ -82,6 +82,9 @@ def results() -> str:
     # Step 6: fetch GWAS Catalog associations for LQTS and FH genes
     gwas_data = gwas_api.fetch_all_condition_associations()
 
+    # Module 4: load equity dashboard data and generate Plotly charts
+    equity_dashboard = equity.build_equity_dashboard()
+
     # Module 3: load static gene editing research dataset
     editing_path = os.path.join(os.path.dirname(__file__), "data", "gene_editing.json")
     if os.path.exists(editing_path):
@@ -104,6 +107,7 @@ def results() -> str:
         clinvar_data=clinvar_data,
         gwas_data=gwas_data,
         gene_editing=gene_editing_data,
+        equity_dashboard=equity_dashboard,
     )
 
 

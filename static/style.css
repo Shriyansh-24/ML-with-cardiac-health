@@ -1063,6 +1063,110 @@ details[open] .research-body {
 .loading-bar.bar-4 { transition-delay: 0.06s; }
 .loading-bar.bar-5 { transition-delay: 0.08s; }
 
+/* ==================================================================
+   5. Equity & Access Dashboard (Module 4)
+   ================================================================== */
+
+.equity-section {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 24px 24px 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.equity-icon {
+    font-size: 1.1em;
+    margin-right: 6px;
+    line-height: 1;
+}
+
+.equity-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.equity-card {
+    background: #fafafa;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 12px 14px 10px;
+    transition: box-shadow 0.2s ease;
+}
+
+.equity-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.equity-chart-container {
+    width: 100%;
+    overflow: hidden;
+}
+
+.equity-chart-container .js-plotly-plot,
+.equity-chart-container .plot-container {
+    width: 100% !important;
+}
+
+.equity-source {
+    margin: 8px 0 0;
+    font-size: 0.75em;
+    color: #999;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+.equity-metadata {
+    margin-top: 16px;
+    font-size: 0.88em;
+}
+
+.equity-metadata-summary {
+    cursor: pointer;
+    color: #888;
+    font-weight: 500;
+    user-select: none;
+    padding: 4px 0;
+    transition: color 0.15s ease;
+}
+
+.equity-metadata-summary:hover {
+    color: #8e44ad;
+}
+
+.equity-metadata-summary::-webkit-details-marker {
+    display: none;
+}
+
+.equity-metadata-summary::marker {
+    display: none;
+    content: '';
+}
+
+.equity-source-list {
+    margin: 6px 0;
+    padding-left: 20px;
+    color: #666;
+    line-height: 1.7;
+}
+
+@media (max-width: 700px) {
+    .equity-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .equity-section {
+        padding: 16px 14px 12px;
+    }
+
+    .equity-card {
+        padding: 8px 10px;
+    }
+}
+
 /* ── GWAS Catalog association items ─────────────────────────────── */
 
 .gwas-item {
