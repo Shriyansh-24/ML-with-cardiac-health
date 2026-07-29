@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{# ── Card layout: 2-column grid on wide screens, single column on mobile ── #}
+{# ── Tabbed layout: Risk Results / Equity & Access / Gene Editing Research ── #}
 
 {% block title %}CardioGenome — Your Risk Report{% endblock %}
 
@@ -43,310 +43,341 @@
   </p>
 </section>
 
-{# ═══════════════════ Condition Cards ═══════════════════════════════ #}
-<h2 class="section-heading" id="condition-cards-heading">Condition-by-condition breakdown</h2>
-<p class="section-sub">
-  Each condition is scored on a hybrid model that combines your
-  Framingham-based ML prediction with condition-specific clinical criteria
-  and any genetic variants you reported.
-</p>
+{# ═══════════════════════ Tab Navigation ═════════════════════════════ #}
+<div class="tab-bar" role="tablist">
+  <button class="tab-btn active" role="tab" aria-selected="true" data-tab="results">
+    <span class="tab-icon">📋</span>
+    Risk Results
+  </button>
+  <button class="tab-btn" role="tab" aria-selected="false" data-tab="equity">
+    <span class="tab-icon">⚖️</span>
+    Equity &amp; Access
+  </button>
+  <button class="tab-btn" role="tab" aria-selected="false" data-tab="research">
+    <span class="tab-icon">🔬</span>
+    Gene Editing Research
+  </button>
+  <div class="tab-indicator"></div>
+</div>
 
-<ol class="card-list">
-  {% for item in ml_assessments %}
-  <li class="card card--{{ card_border_mod(item.boosts, item.rules_reasons) }}">
+{# Plotly.js — loaded once outside tab panels so it's always available #}
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
 
-    {# ── Card header: title + score badge + genes ── #}
-    <div class="card-header">
-      <div class="card-title-group">
-        <h3 class="card-title">{{ item.full_name }}</h3>
-        <span class="card-code">{{ item.condition }}</span>
-      </div>
-      <div class="card-score-wrap">
-        <span class="card-score-num">{{ "%.1f" | format(item.hybrid_score) }}</span>
-        <span class="card-score-max">/100</span>
-      </div>
-    </div>
+{# ═══════════════════════════════════════════════════════════════════ #}
+{# ═══════════════════  TAB 1 — Risk Results  ══════════════════════ #}
+{# ═══════════════════════════════════════════════════════════════════ #}
+<div class="tab-panel active" id="tab-results" role="tabpanel">
 
-    {# ── Score bar (animates in on load) ── #}
-    <div class="score-bar">
-      <div
-        class="score-fill"
-        data-width="{{ item.hybrid_score }}"
-        style="width: 0%;"
-      >
-        <span class="score-fill-text">{{ "%.1f" | format(item.hybrid_score) }}/100</span>
-      </div>
-    </div>
-
-    <div class="card-meta">
-      {{ risk_factors_tag(item.boosts, item.rules_reasons) }}
-      <span class="card-criteria">
-        <strong>{{ item.rules_score }}/{{ item.rules_max_score }}</strong> clinical criteria matched
-      </span>
-    </div>
-
-    {# ── Expandable details (single accordion) ── #}
-    <details class="card-details">
-      <summary class="details-summary">
-        <span class="details-summary-text">View full analysis</span>
-        <span class="chevron">▶</span>
-      </summary>
-      <div class="details-body">
-
-        {# ── Contributing factors ── #}
-        {% if item.boosts %}
-        <section class="detail-section">
-          <h4 class="detail-title">⚡ Factors that raised this score</h4>
-          <ul class="detail-list">
-            {% for boost in item.boosts %}
-            <li>{{ boost }}</li>
-            {% endfor %}
-          </ul>
-        </section>
-        {% endif %}
-
-        {# ── Clinical criteria matched ── #}
-        {% if item.rules_reasons %}
-        <section class="detail-section">
-          <h4 class="detail-title">✓ Clinical criteria matched</h4>
-          <ul class="detail-list">
-            {% for reason in item.rules_reasons %}
-            <li>{{ reason }}</li>
-            {% endfor %}
-          </ul>
-        </section>
-        {% else %}
-        <section class="detail-section">
-          <h4 class="detail-title">✓ Clinical criteria</h4>
-          <p class="detail-empty">No simplified criteria were matched.</p>
-        </section>
-        {% endif %}
-
-        {# ── ML model contribution ── #}
-        <section class="detail-section">
-          <h4 class="detail-title">📊 ML model contribution</h4>
-          <p class="detail-text">
-            The Random Forest predicted a
-            <strong>{{ "%.1f" | format(global_probability * 100) }}%</strong>
-            10-year CHD probability from your vitals. This contributed
-            <strong>{{ item.ml_base_score }}</strong> of the
-            <strong>{{ "%.1f" | format(item.hybrid_score) }}</strong> points.
-          </p>
-          <div class="detail-bar-wrap">
-            <div class="detail-bar-label">
-              <span>ML base</span>
-              <span>{{ item.ml_base_score }}/40</span>
-            </div>
-            <div class="detail-bar-track">
-              <div class="detail-bar-fill detail-bar-fill--ml" style="width: {{ (item.ml_base_score / 40 * 100) | round(1) }}%;"></div>
-            </div>
-          </div>
-          <div class="detail-bar-wrap">
-            <div class="detail-bar-label">
-              <span>Rules boosts</span>
-              <span>{{ (item.hybrid_score - item.ml_base_score) | round(1) }}/60</span>
-            </div>
-            <div class="detail-bar-track">
-              <div class="detail-bar-fill detail-bar-fill--boost" style="width: {{ ((item.hybrid_score - item.ml_base_score) / 60 * 100) | round(1) }}%;"></div>
-            </div>
-          </div>
-        </section>
-
-        {# ── ClinVar genetic data (HCM only) ── #}
-        {% if item.condition == "HCM" and clinvar_data and not clinvar_data.error %}
-        <section class="detail-section">
-          <h4 class="detail-title">🧬 Genetic variant data</h4>
-          <p class="detail-text">
-            The NCBI ClinVar database has
-            <strong>{{ clinvar_data.total_variants }}</strong> variants for
-            <strong>{{ clinvar_data.gene }}</strong>.
-          </p>
-          {% if clinvar_data.summary_by_significance %}
-          <div class="sig-pills">
-            {% for bucket, count in clinvar_data.summary_by_significance.items() %}
-            <span class="sig-pill">{{ bucket }}: <strong>{{ count }}</strong></span>
-            {% endfor %}
-          </div>
-          {% endif %}
-          {% if clinvar_data.notable_variants %}
-          <details class="variant-list-details">
-            <summary class="variant-list-summary">
-              Notable pathogenic variants <span class="chevron">▶</span>
-            </summary>
-            <div class="variant-grid">
-              {% for variant in clinvar_data.notable_variants[:6] %}
-              <div class="variant-item">
-                <div class="variant-title">{{ variant.title }}</div>
-                <div class="variant-meta">
-                  <span class="variant-sig variant-sig--{{ variant.clinical_significance | lower | replace(' ', '_') }}">
-                    {{ variant.clinical_significance }}
-                  </span>
-                  <span>{{ variant.variant_type }}</span>
-                  {% if variant.protein_change and variant.protein_change != '—' %}
-                  <span>{{ variant.protein_change }}</span>
-                  {% endif %}
-                </div>
-              </div>
-              {% endfor %}
-            </div>
-          </details>
-          {% endif %}
-          <p class="detail-footnote">
-            Source: NCBI ClinVar · {{ clinvar_data.fetched_at.split('T')[0] }}
-          </p>
-        </section>
-        {% elif item.condition == "HCM" and clinvar_data.error %}
-        <section class="detail-section">
-          <h4 class="detail-title">🧬 Genetic variant data</h4>
-          <p class="detail-text detail-text--warn">
-            ClinVar data unavailable: {{ clinvar_data.error }}
-          </p>
-        </section>
-        {% endif %}
-
-        {# ── GWAS Catalog data (LQTS and FH) ── #}
-        {% set condition_gwas = gwas_data.get(item.condition) %}
-        {% if item.condition in ("LQTS", "FH") and condition_gwas and not condition_gwas.error %}
-        <section class="detail-section">
-          <h4 class="detail-title">🧬 GWAS Catalog associations</h4>
-          <p class="detail-text">
-            The GWAS Catalog lists
-            <strong>{{ condition_gwas.total_associations }}</strong> associations
-            across <strong>{{ condition_gwas.genes | join(", ") }}</strong>.
-          </p>
-          {% if condition_gwas.summary_by_trait %}
-          <div class="sig-pills">
-            {% for trait, count in (condition_gwas.summary_by_trait.items() | list)[:8] %}
-            <span class="sig-pill pill--trait">{{ trait }}: <strong>{{ count }}</strong></span>
-            {% endfor %}
-            {% if condition_gwas.summary_by_trait | length > 8 %}
-            <span class="sig-pill pill--more">+{{ condition_gwas.summary_by_trait | length - 8 }} more</span>
-            {% endif %}
-          </div>
-          {% endif %}
-          {% if condition_gwas.notable_associations %}
-          <details class="variant-list-details">
-            <summary class="variant-list-summary">
-              Most significant associations <span class="chevron">▶</span>
-            </summary>
-            <div class="variant-grid">
-              {% for assoc in condition_gwas.notable_associations %}
-              <div class="gwas-item">
-                <div class="gwas-item-header">
-                  <span class="gwas-rsid">{{ assoc.rs_id }}</span>
-                  <span class="gwas-pvalue">p = {{ assoc.p_value_formatted }}</span>
-                </div>
-                <div class="gwas-item-detail">
-                  <span class="gwas-trait">{{ assoc.trait }}</span>
-                  {% if assoc.risk_allele and assoc.risk_allele != '—' %}
-                  <span class="gwas-allele">Risk allele: <strong>{{ assoc.risk_allele }}</strong></span>
-                  {% endif %}
-                  {% if assoc.effect_size %}
-                  <span class="gwas-or">β/OR = {{ assoc.effect_size_formatted }}</span>
-                  {% endif %}
-                </div>
-                {% if assoc.reported_genes %}
-                <div class="variant-meta" style="margin-top: 4px;">
-                  <span>Reported genes: {{ assoc.reported_genes | join(", ") }}</span>
-                </div>
-                {% endif %}
-              </div>
-              {% endfor %}
-            </div>
-          </details>
-          {% endif %}
-          <p class="detail-footnote">
-            Source: EMBL-EBI GWAS Catalog · {{ condition_gwas.fetched_at.split('T')[0] }}
-          </p>
-        </section>
-        {% elif item.condition in ("LQTS", "FH") and condition_gwas and condition_gwas.error %}
-        <section class="detail-section">
-          <h4 class="detail-title">🧬 GWAS Catalog associations</h4>
-          <p class="detail-text detail-text--warn">
-            GWAS data unavailable: {{ condition_gwas.error }}
-          </p>
-        </section>
-        {% endif %}
-
-        {# ── Associated genes ── #}
-        <section class="detail-section">
-          <h4 class="detail-title">🧬 Associated genes</h4>
-          <p class="detail-text">
-            The following genes are linked to {{ item.full_name }}:
-          </p>
-          <div class="gene-chips">
-            {% for gene in item.genes %}
-            <span class="gene-chip">{{ gene }}</span>
-            {% endfor %}
-          </div>
-        </section>
-
-      </div>{# /details-body #}
-    </details>
-  </li>
-  {% endfor %}
-</ol>
-
-{# ═══════════════════ Equity & Access Dashboard ═══════════════════════ #}
-{% if equity_dashboard.has_data %}
-<section class="equity-section">
-  <h2 class="section-heading">
-    <span class="equity-icon">⚖️</span>
-    Equity &amp; Access in Cardiac Genetics
-  </h2>
+  <h2 class="section-heading" id="condition-cards-heading">Condition-by-condition breakdown</h2>
   <p class="section-sub">
-    Genetic testing and advanced therapies are not equally available to all
-    populations. The charts below illustrate real disparities documented in
-    published research.
+    Each condition is scored on a hybrid model that combines your
+    Framingham-based ML prediction with condition-specific clinical criteria
+    and any genetic variants you reported.
   </p>
 
-  {# Plotly.js single load #}
-  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+  <ol class="card-list">
+    {% for item in ml_assessments %}
+    <li class="card card--{{ card_border_mod(item.boosts, item.rules_reasons) }}">
 
-  <div class="equity-grid">
-    {% set chart_keys = ["testing_by_race", "testing_by_income", "trial_representation", "global_access"] %}
-    {% for key in chart_keys %}
-    {% set chart = equity_dashboard.charts.get(key) %}
-    {% if chart and chart.html %}
-    <div class="equity-card">
-      <div class="equity-chart-container">
-        {{ chart.html | safe }}
+      {# ── Card header: title + score badge + genes ── #}
+      <div class="card-header">
+        <div class="card-title-group">
+          <h3 class="card-title">{{ item.full_name }}</h3>
+          <span class="card-code">{{ item.condition }}</span>
+        </div>
+        <div class="card-score-wrap">
+          <span class="card-score-num">{{ "%.1f" | format(item.hybrid_score) }}</span>
+          <span class="card-score-max">/100</span>
+        </div>
       </div>
-      {% if chart.source_note %}
-      <p class="equity-source">{{ chart.source_note }}</p>
-      {% endif %}
-    </div>
-    {% endif %}
+
+      {# ── Score bar (animates in on load) ── #}
+      <div class="score-bar">
+        <div
+          class="score-fill"
+          data-width="{{ item.hybrid_score }}"
+          style="width: 0%;"
+        >
+          <span class="score-fill-text">{{ "%.1f" | format(item.hybrid_score) }}/100</span>
+        </div>
+      </div>
+
+      <div class="card-meta">
+        {{ risk_factors_tag(item.boosts, item.rules_reasons) }}
+        <span class="card-criteria">
+          <strong>{{ item.rules_score }}/{{ item.rules_max_score }}</strong> clinical criteria matched
+        </span>
+      </div>
+
+      {# ── Expandable details (single accordion) ── #}
+      <details class="card-details">
+        <summary class="details-summary">
+          <span class="details-summary-text">View full analysis</span>
+          <span class="chevron">▶</span>
+        </summary>
+        <div class="details-body">
+
+          {# ── Contributing factors ── #}
+          {% if item.boosts %}
+          <section class="detail-section">
+            <h4 class="detail-title">⚡ Factors that raised this score</h4>
+            <ul class="detail-list">
+              {% for boost in item.boosts %}
+              <li>{{ boost }}</li>
+              {% endfor %}
+            </ul>
+          </section>
+          {% endif %}
+
+          {# ── Clinical criteria matched ── #}
+          {% if item.rules_reasons %}
+          <section class="detail-section">
+            <h4 class="detail-title">✓ Clinical criteria matched</h4>
+            <ul class="detail-list">
+              {% for reason in item.rules_reasons %}
+              <li>{{ reason }}</li>
+              {% endfor %}
+            </ul>
+          </section>
+          {% else %}
+          <section class="detail-section">
+            <h4 class="detail-title">✓ Clinical criteria</h4>
+            <p class="detail-empty">No simplified criteria were matched.</p>
+          </section>
+          {% endif %}
+
+          {# ── ML model contribution ── #}
+          <section class="detail-section">
+            <h4 class="detail-title">📊 ML model contribution</h4>
+            <p class="detail-text">
+              The Random Forest predicted a
+              <strong>{{ "%.1f" | format(global_probability * 100) }}%</strong>
+              10-year CHD probability from your vitals. This contributed
+              <strong>{{ item.ml_base_score }}</strong> of the
+              <strong>{{ "%.1f" | format(item.hybrid_score) }}</strong> points.
+            </p>
+            <div class="detail-bar-wrap">
+              <div class="detail-bar-label">
+                <span>ML base</span>
+                <span>{{ item.ml_base_score }}/40</span>
+              </div>
+              <div class="detail-bar-track">
+                <div class="detail-bar-fill detail-bar-fill--ml" style="width: {{ (item.ml_base_score / 40 * 100) | round(1) }}%;"></div>
+              </div>
+            </div>
+            <div class="detail-bar-wrap">
+              <div class="detail-bar-label">
+                <span>Rules boosts</span>
+                <span>{{ (item.hybrid_score - item.ml_base_score) | round(1) }}/60</span>
+              </div>
+              <div class="detail-bar-track">
+                <div class="detail-bar-fill detail-bar-fill--boost" style="width: {{ ((item.hybrid_score - item.ml_base_score) / 60 * 100) | round(1) }}%;"></div>
+              </div>
+            </div>
+          </section>
+
+          {# ── ClinVar genetic data (HCM only) ── #}
+          {% if item.condition == "HCM" and clinvar_data and not clinvar_data.error %}
+          <section class="detail-section">
+            <h4 class="detail-title">🧬 Genetic variant data</h4>
+            <p class="detail-text">
+              The NCBI ClinVar database has
+              <strong>{{ clinvar_data.total_variants }}</strong> variants for
+              <strong>{{ clinvar_data.gene }}</strong>.
+            </p>
+            {% if clinvar_data.summary_by_significance %}
+            <div class="sig-pills">
+              {% for bucket, count in clinvar_data.summary_by_significance.items() %}
+              <span class="sig-pill">{{ bucket }}: <strong>{{ count }}</strong></span>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% if clinvar_data.notable_variants %}
+            <details class="variant-list-details">
+              <summary class="variant-list-summary">
+                Notable pathogenic variants <span class="chevron">▶</span>
+              </summary>
+              <div class="variant-grid">
+                {% for variant in clinvar_data.notable_variants[:6] %}
+                <div class="variant-item">
+                  <div class="variant-title">{{ variant.title }}</div>
+                  <div class="variant-meta">
+                    <span class="variant-sig variant-sig--{{ variant.clinical_significance | lower | replace(' ', '_') }}">
+                      {{ variant.clinical_significance }}
+                    </span>
+                    <span>{{ variant.variant_type }}</span>
+                    {% if variant.protein_change and variant.protein_change != '—' %}
+                    <span>{{ variant.protein_change }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </details>
+            {% endif %}
+            <p class="detail-footnote">
+              Source: NCBI ClinVar · {{ clinvar_data.fetched_at.split('T')[0] }}
+            </p>
+          </section>
+          {% elif item.condition == "HCM" and clinvar_data.error %}
+          <section class="detail-section">
+            <h4 class="detail-title">🧬 Genetic variant data</h4>
+            <p class="detail-text detail-text--warn">
+              ClinVar data unavailable: {{ clinvar_data.error }}
+            </p>
+          </section>
+          {% endif %}
+
+          {# ── GWAS Catalog data (LQTS and FH) ── #}
+          {% set condition_gwas = gwas_data.get(item.condition) %}
+          {% if item.condition in ("LQTS", "FH") and condition_gwas and not condition_gwas.error %}
+          <section class="detail-section">
+            <h4 class="detail-title">🧬 GWAS Catalog associations</h4>
+            <p class="detail-text">
+              The GWAS Catalog lists
+              <strong>{{ condition_gwas.total_associations }}</strong> associations
+              across <strong>{{ condition_gwas.genes | join(", ") }}</strong>.
+            </p>
+            {% if condition_gwas.summary_by_trait %}
+            <div class="sig-pills">
+              {% for trait, count in (condition_gwas.summary_by_trait.items() | list)[:8] %}
+              <span class="sig-pill pill--trait">{{ trait }}: <strong>{{ count }}</strong></span>
+              {% endfor %}
+              {% if condition_gwas.summary_by_trait | length > 8 %}
+              <span class="sig-pill pill--more">+{{ condition_gwas.summary_by_trait | length - 8 }} more</span>
+              {% endif %}
+            </div>
+            {% endif %}
+            {% if condition_gwas.notable_associations %}
+            <details class="variant-list-details">
+              <summary class="variant-list-summary">
+                Most significant associations <span class="chevron">▶</span>
+              </summary>
+              <div class="variant-grid">
+                {% for assoc in condition_gwas.notable_associations %}
+                <div class="gwas-item">
+                  <div class="gwas-item-header">
+                    <span class="gwas-rsid">{{ assoc.rs_id }}</span>
+                    <span class="gwas-pvalue">p = {{ assoc.p_value_formatted }}</span>
+                  </div>
+                  <div class="gwas-item-detail">
+                    <span class="gwas-trait">{{ assoc.trait }}</span>
+                    {% if assoc.risk_allele and assoc.risk_allele != '—' %}
+                    <span class="gwas-allele">Risk allele: <strong>{{ assoc.risk_allele }}</strong></span>
+                    {% endif %}
+                    {% if assoc.effect_size %}
+                    <span class="gwas-or">β/OR = {{ assoc.effect_size_formatted }}</span>
+                    {% endif %}
+                  </div>
+                  {% if assoc.reported_genes %}
+                  <div class="variant-meta" style="margin-top: 4px;">
+                    <span>Reported genes: {{ assoc.reported_genes | join(", ") }}</span>
+                  </div>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+            </details>
+            {% endif %}
+            <p class="detail-footnote">
+              Source: EMBL-EBI GWAS Catalog · {{ condition_gwas.fetched_at.split('T')[0] }}
+            </p>
+          </section>
+          {% elif item.condition in ("LQTS", "FH") and condition_gwas and condition_gwas.error %}
+          <section class="detail-section">
+            <h4 class="detail-title">🧬 GWAS Catalog associations</h4>
+            <p class="detail-text detail-text--warn">
+              GWAS data unavailable: {{ condition_gwas.error }}
+            </p>
+          </section>
+          {% endif %}
+
+          {# ── Associated genes ── #}
+          <section class="detail-section">
+            <h4 class="detail-title">🧬 Associated genes</h4>
+            <p class="detail-text">
+              The following genes are linked to {{ item.full_name }}:
+            </p>
+            <div class="gene-chips">
+              {% for gene in item.genes %}
+              <span class="gene-chip">{{ gene }}</span>
+              {% endfor %}
+            </div>
+          </section>
+
+        </div>{# /details-body #}
+      </details>
+    </li>
     {% endfor %}
-  </div>
+  </ol>
 
-  <details class="equity-metadata">
-    <summary class="equity-metadata-summary">
-      Data sources <span class="chevron">▶</span>
-    </summary>
-    <ul class="equity-source-list">
-      {% for source in equity_dashboard.metadata.sources %}
-      <li>{{ source }}</li>
-      {% endfor %}
-    </ul>
-    <p class="detail-footnote">
-      Data compiled {{ equity_dashboard.metadata.last_updated }}. These are
-      composite estimates from published literature, used for educational
-      illustration.
+</div>{# /tab-results #}
+
+{# ═══════════════════════════════════════════════════════════════════ #}
+{# ════════════════  TAB 2 — Equity & Access  ═══════════════════════ #}
+{# ═══════════════════════════════════════════════════════════════════ #}
+<div class="tab-panel" id="tab-equity" role="tabpanel">
+
+  {% if equity_dashboard.has_data %}
+  <section class="equity-section">
+    <h2 class="section-heading">
+      <span class="equity-icon">⚖️</span>
+      Equity &amp; Access in Cardiac Genetics
+    </h2>
+    <p class="section-sub">
+      Genetic testing and advanced therapies are not equally available to all
+      populations. The charts below illustrate real disparities documented in
+      published research.
     </p>
-  </details>
-</section>
-{% endif %}
 
-{# ═══════════════════ Advanced: Gene Editing Research ═════════════════ #}
-<details class="research-section">
-  <summary class="research-summary">
-    <span class="research-icon">🔬</span>
-    <span class="research-summary-text">Advanced: Gene Editing Research</span>
-    <span class="research-badge">3 conditions</span>
-    <span class="chevron">▶</span>
-  </summary>
-  <div class="research-body">
+    <div class="equity-grid">
+      {% set chart_keys = ["testing_by_race", "testing_by_income", "trial_representation", "global_access"] %}
+      {% for key in chart_keys %}
+      {% set chart = equity_dashboard.charts.get(key) %}
+      {% if chart and chart.html %}
+      <div class="equity-card">
+        <div class="equity-chart-container">
+          {{ chart.html | safe }}
+        </div>
+        {% if chart.source_note %}
+        <p class="equity-source">{{ chart.source_note }}</p>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    <details class="equity-metadata">
+      <summary class="equity-metadata-summary">
+        Data sources <span class="chevron">▶</span>
+      </summary>
+      <ul class="equity-source-list">
+        {% for source in equity_dashboard.metadata.sources %}
+        <li>{{ source }}</li>
+        {% endfor %}
+      </ul>
+      <p class="detail-footnote">
+        Data compiled {{ equity_dashboard.metadata.last_updated }}. These are
+        composite estimates from published literature, used for educational
+        illustration.
+      </p>
+    </details>
+  </section>
+  {% endif %}
+
+</div>{# /tab-equity #}
+
+{# ═══════════════════════════════════════════════════════════════════ #}
+{# ═══════════════  TAB 3 — Gene Editing Research  ══════════════════ #}
+{# ═══════════════════════════════════════════════════════════════════ #}
+<div class="tab-panel" id="tab-research" role="tabpanel">
+
+  <section class="research-section">
+    <h2 class="section-heading">
+      <span class="research-icon">🔬</span>
+      Gene Editing Research
+      <span class="research-badge">3 conditions</span>
+    </h2>
     <p class="research-intro">
       This section covers current gene editing and gene therapy approaches in
       development for the three conditions screened above. Data is compiled from
@@ -393,16 +424,71 @@
       consult <a href="https://clinicaltrials.gov" target="_blank" rel="noopener">ClinicalTrials.gov</a>
       for the most current information.
     </p>
-  </div>
-</details>
+  </section>
 
-{# ── Score bar animation (runs once on page load) ── #}
+</div>{# /tab-research #}
+
+{# ═══════════════════════════════════════════════════════════════════ #}
+{# ══════════════════════  JavaScript  ══════════════════════════════ #}
+{# ═══════════════════════════════════════════════════════════════════ #}
+
 <script>
+// ── Tab switching (runs independently of score bars) ──
+(function() {
+  var tabBar = document.querySelector('.tab-bar');
+  if (!tabBar) return;
+
+  // Set initial indicator position
+  var indicator = tabBar.querySelector('.tab-indicator');
+  var activeBtn = document.querySelector('.tab-btn.active');
+  if (indicator && activeBtn) {
+    indicator.style.left = activeBtn.offsetLeft + 'px';
+    indicator.style.width = activeBtn.offsetWidth + 'px';
+  }
+
+  tabBar.addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+
+    var tabId = btn.getAttribute('data-tab');
+    if (!tabId) return;
+
+    // Update button states
+    document.querySelectorAll('.tab-btn').forEach(function(b) {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+
+    // Move the indicator
+    if (indicator) {
+      indicator.style.left = btn.offsetLeft + 'px';
+      indicator.style.width = btn.offsetWidth + 'px';
+    }
+
+    // Show the target panel
+    document.querySelectorAll('.tab-panel').forEach(function(p) {
+      p.classList.remove('active');
+    });
+    var target = document.getElementById('tab-' + tabId);
+    if (target) target.classList.add('active');
+
+    // Resize Plotly charts when equity tab is activated
+    if (tabId === 'equity' && typeof Plotly !== 'undefined') {
+      setTimeout(function() {
+        document.querySelectorAll('#tab-equity .js-plotly-plot').forEach(function(el) {
+          Plotly.Plots.resize(el);
+        });
+      }, 100);
+    }
+  });
+})();
+
+// ── Score bar animation (runs once on page load) ──
 (function() {
   var bars = document.querySelectorAll('.score-fill');
   if (!bars.length) return;
-  // Small delay lets the browser paint the initial 0% width first,
-  // then the CSS transition animates to the target width.
   setTimeout(function() {
     bars.forEach(function(bar) {
       var w = bar.getAttribute('data-width');

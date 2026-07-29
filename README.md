@@ -60,6 +60,11 @@ Then visit `http://127.0.0.1:5000`.
   cards with clear "No additional factors" / "Additional factors detected" tags that
   accurately reflect whether condition-specific evidence (family history, symptoms,
   genetic variants) was found.
+- **Tabbed results layout** — the combined results page was refactored into 3
+  separate tabs (Risk Results, Equity & Access, Gene Editing Research) with a
+  sliding indicator navigation bar, making the page far less overwhelming for
+  basic users while keeping all advanced data accessible in dedicated tabs.
+  The overview card remains visible above all tabs.
 
 ## Completed steps
 

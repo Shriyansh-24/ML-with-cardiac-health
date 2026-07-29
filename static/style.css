@@ -1167,6 +1167,149 @@ details[open] .research-body {
     }
 }
 
+/* ==================================================================
+   6. Tabbed layout
+   ================================================================== */
+
+.tab-bar {
+    position: relative;
+    display: flex;
+    gap: 0;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+.tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 16px;
+    font-size: 0.88em;
+    font-weight: 500;
+    color: #999;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
+    user-select: none;
+    font-family: inherit;
+    position: relative;
+    z-index: 2;
+}
+
+.tab-btn:hover {
+    color: #666;
+    background: #fafafa;
+}
+
+.tab-btn.active {
+    color: #c0392b;
+    font-weight: 600;
+}
+
+.tab-icon {
+    font-size: 1.1em;
+    line-height: 1;
+}
+
+.tab-indicator {
+    position: absolute;
+    bottom: 0;
+    height: 3px;
+    background: #c0392b;
+    border-radius: 3px 3px 0 0;
+    transition: left 0.3s cubic-bezier(0.22, 1, 0.36, 1), width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 1;
+}
+
+.tab-panel {
+    display: none;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 24px 24px 20px;
+    margin-bottom: 20px;
+    animation: tab-fade-in 0.3s ease;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+.tab-panel > .card-list:first-child,
+.tab-panel > .section-heading:first-child {
+    margin-top: 0;
+}
+
+.tab-panel > .section-heading:first-child {
+    padding-top: 0;
+}
+
+@keyframes tab-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Gene editing section inside tab gets its own background ── */
+.tab-panel .research-section {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+.tab-panel .research-section .section-heading {
+    margin-top: 0;
+}
+
+.tab-panel .research-section .research-intro {
+    margin-top: 0;
+}
+
+/* ── Equity section inside tab ── */
+.tab-panel .equity-section {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+@media (max-width: 600px) {
+    .tab-bar {
+        flex-direction: column;
+        border-radius: 10px;
+    }
+
+    .tab-indicator {
+        display: none;
+    }
+
+    .tab-btn.active {
+        background: #fdecea;
+    }
+
+    .tab-panel {
+        border-radius: 0 0 10px 10px;
+        padding: 16px 14px;
+    }
+}
+
 /* ── GWAS Catalog association items ─────────────────────────────── */
 
 .gwas-item {
