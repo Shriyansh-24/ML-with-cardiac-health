@@ -53,8 +53,9 @@
     {% if model_source == "nhanes" %}
       Based on your age, blood pressure, and cholesterol across
       <strong>16,842 NHANES survey participants</strong>.
-      <br><small>Features we can't collect (BMI, waist circumference, CRP) are
-      estimated from national averages.</small>
+      <br><small>Features we can't collect (waist circumference, CRP) are
+      estimated from national averages. BMI is calculated from your
+      height and weight if provided.</small>
     {% elif model_source == "framingham" %}
       Based on your age, sex, blood pressure, cholesterol, and heart rate
       across <strong>4,189 Framingham Heart Study patients</strong>.

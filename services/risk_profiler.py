@@ -37,6 +37,8 @@ class UserHealthData(TypedDict):
     systolic_bp: int                # mmHg
     total_cholesterol: int          # mg/dL
     ldl_cholesterol: int            # mg/dL
+    height_cm: Optional[float]      # cm (optional — if provided, BMI is calculated)
+    weight_kg: Optional[float]      # kg (optional — if provided, BMI is calculated)
     variant_myh7: bool              # self-reported MYH7 pathogenic variant (HCM)
     variant_kcnq1: bool             # self-reported KCNQ1 pathogenic variant (LQTS)
     variant_ldlr: bool              # self-reported LDLR pathogenic variant (FH)
@@ -81,6 +83,28 @@ def _parse_bool(value: Optional[str]) -> bool:
     if value is None:
         return False
     return value.strip().lower() in {"yes", "on", "true", "1"}
+
+
+def _parse_optional_float(value: Optional[str]) -> Optional[float]:
+    """
+    Parse an optional float field from the form.
+
+    Returns None if the field is empty or absent (the user didn't fill it in),
+    or the float value if it's a valid number. Never raises — optional fields
+    should not block form submission.
+
+    Args:
+        value: The raw form value, or None if the field wasn't submitted.
+
+    Returns:
+        Optional[float]: The parsed float, or None.
+    """
+    if value is None or value.strip() == "":
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
 
 
 def parse_form_data(form: Mapping[str, str]) -> UserHealthData:
@@ -134,6 +158,9 @@ def parse_form_data(form: Mapping[str, str]) -> UserHealthData:
         systolic_bp=require_int("systolic_bp"),
         total_cholesterol=require_int("total_cholesterol"),
         ldl_cholesterol=require_int("ldl_cholesterol"),
+        # Height/weight are optional — parse if provided, else None
+        height_cm=_parse_optional_float(form.get("height_cm")),
+        weight_kg=_parse_optional_float(form.get("weight_kg")),
         # Variant checkboxes are always optional — the spec says the model
         # still runs if the user has no genetic data, so these default to
         # False rather than raising if absent.

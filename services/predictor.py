@@ -107,7 +107,15 @@ def _prepare_features(data: UserHealthData) -> pd.DataFrame:
         "Total_Colesterol": float(data["total_cholesterol"]),
     }
 
-    # Impute missing features with training-set medians
+    # Calculate BMI from height/weight if both are provided (optional fields)
+    height_cm = data.get("height_cm")
+    weight_kg = data.get("weight_kg")
+    if height_cm is not None and weight_kg is not None and height_cm > 0:
+        # BMI = weight (kg) / (height in meters)^2
+        height_m = height_cm / 100.0
+        features["BMI"] = round(weight_kg / (height_m * height_m), 1)
+
+    # Impute any remaining missing features with training-set medians
     for feat_name in feature_names:
         if feat_name not in features:
             features[feat_name] = float(impute_medians.get(feat_name, 0.0))
