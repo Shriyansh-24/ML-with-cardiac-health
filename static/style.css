@@ -206,6 +206,37 @@ legend {
     line-height: 1.5;
 }
 
+.overview-note small {
+    color: #aaa;
+}
+
+/* ── Model source badge ───────────────────────────────────────── */
+
+.model-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.7em;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: help;
+}
+
+.model-badge--nhanes {
+    background: #eaf2f8;
+    color: #1a5276;
+    border: 1px solid #aed6f1;
+}
+
+.model-badge--framingham {
+    background: #fdecea;
+    color: #922b21;
+    border: 1px solid #e6b0aa;
+}
+
 /* ── Section heading ───────────────────────────────────────────── */
 
 .section-heading {

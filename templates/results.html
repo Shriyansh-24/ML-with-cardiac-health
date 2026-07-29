@@ -31,15 +31,36 @@
       {{ global_risk_level }}
     </span>
     <span class="overview-pct">{{ "%.1f" | format(global_probability * 100) }}%</span>
-    <span class="overview-label">10-year CHD probability</span>
+    <span class="overview-label">Cardiac risk probability</span>
+
+    {# ── Model source badge ── #}
+    {% if model_source == "nhanes" %}
+    <span class="model-badge model-badge--nhanes" title="Risk estimated from CDC NHANES national health survey (16,842 participants)">
+      NHANES
+    </span>
+    {% elif model_source == "framingham" %}
+    <span class="model-badge model-badge--framingham" title="Risk estimated from Framingham Heart Study (4,189 participants)">
+      Framingham
+    </span>
+    {% endif %}
+
     {% if global_probability * 100 >= FLAG_THRESHOLD %}
     <span class="flag-badge">⚠ Flagged</span>
     {% endif %}
   </div>
 
   <p class="overview-note">
-    Based on your age, sex, blood pressure, cholesterol, and heart rate
-    across <strong>4,189 Framingham Heart Study patients</strong>.
+    {% if model_source == "nhanes" %}
+      Based on your age, blood pressure, and cholesterol across
+      <strong>16,842 NHANES survey participants</strong>.
+      <br><small>Features we can't collect (BMI, waist circumference, CRP) are
+      estimated from national averages.</small>
+    {% elif model_source == "framingham" %}
+      Based on your age, sex, blood pressure, cholesterol, and heart rate
+      across <strong>4,189 Framingham Heart Study patients</strong>.
+    {% else %}
+      Estimated from your health data.
+    {% endif %}
   </p>
 </section>
 
@@ -71,7 +92,12 @@
   <h2 class="section-heading" id="condition-cards-heading">Condition-by-condition breakdown</h2>
   <p class="section-sub">
     Each condition is scored on a hybrid model that combines your
-    Framingham-based ML prediction with condition-specific clinical criteria
+    {% if model_source == "nhanes" %}
+    NHANES-based
+    {% else %}
+    Framingham-based
+    {% endif %}
+    ML prediction with condition-specific clinical criteria
     and any genetic variants you reported.
   </p>
 
@@ -150,9 +176,16 @@
           <section class="detail-section">
             <h4 class="detail-title">📊 ML model contribution</h4>
             <p class="detail-text">
-              The Random Forest predicted a
+              The
+              {% if model_source == "nhanes" %}
+              XGBoost model (trained on CDC NHANES data) predicted a
+              {% elif model_source == "framingham" %}
+              Random Forest model (trained on Framingham Heart Study) predicted a
+              {% else %}
+              model predicted a
+              {% endif %}
               <strong>{{ "%.1f" | format(global_probability * 100) }}%</strong>
-              10-year CHD probability from your vitals. This contributed
+              cardiac risk probability from your health data. This contributed
               <strong>{{ item.ml_base_score }}</strong> of the
               <strong>{{ "%.1f" | format(item.hybrid_score) }}</strong> points.
             </p>

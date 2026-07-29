@@ -98,12 +98,14 @@ def results() -> str:
         gene_editing_data = {"conditions": {}, "last_updated": ""}
 
     global_chd = ml_assessments[0] if ml_assessments else None
+    model_source = global_chd["model_source"] if global_chd else "none"
 
     return render_template(
         "results.html",
         ml_assessments=ml_assessments,
         global_risk_level=global_chd["ml_risk_level"] if global_chd else "Unknown",
         global_probability=global_chd["ml_probability"] if global_chd else 0,
+        model_source=model_source,
         clinvar_data=clinvar_data,
         gwas_data=gwas_data,
         gene_editing=gene_editing_data,
