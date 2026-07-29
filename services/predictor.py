@@ -2,37 +2,31 @@
 services/predictor.py — ML + rules hybrid predictor for CardioGenome.
 
 WHAT THIS MODULE DOES
-    Combines a machine learning model (either the NHANES XGBoost model or
-    the Framingham Random Forest fallback) with rules-based risk factors
-    that the model was never trained on (family history, genetic variants,
-    personal symptoms).
+    Runs the NHANES XGBoost model (ml/cardiac_model_nhanes.pkl) to get a
+    cardiac risk probability, then layers condition-specific rules-based
+    boosts on top for factors the ML model was never trained on (family
+    history, genetic variants, personal symptoms).
 
-MODEL ARCHITECTURE (two-tier):
-    1. **Primary: NHANES XGBoost** (ml/cardiac_model_nhanes.pkl)
-       - Trained on NHANES 2017-2023 (~16,800 samples, 7 features)
-       - Target: composite CVD (CHF, CHD, MI, stroke, angina)
-       - ROC-AUC: 0.818 (tuned), 0.761 ± 0.018 (10-fold CV)
-       - Uses Age, Systolic_BP, Total_Cholesterol from form + imputed features
+MODEL: NHANES XGBoost
+    - Trained on CDC NHANES 2017-2023 (~16,800 samples, 7 features)
+    - Target: composite CVD (CHF, CHD, MI, stroke, angina)
+    - ROC-AUC: 0.818 (tuned), 0.761 ± 0.018 (10-fold CV)
+    - Uses Age, Systolic_BP, Total_Cholesterol from form +
+      BMI, waist circumference, diastolic BP, CRP (imputed with medians)
 
-    2. **Fallback: Framingham Random Forest** (ml/cardiac_model.pkl)
-       - Trained on Framingham Heart Study (~4,200 samples, 5 features)
-       - Target: 10-year CHD risk
-       - ROC-AUC: 0.715 ± 0.041 (10-fold CV)
-       - Uses age, sex, BP, cholesterol, heart rate from form
+HOW THE HYBRID WORKS
+    The ML model predicts general cardiac risk from clinical data. But
+    each condition (HCM, LQTS, FH) has unique risk factors that the
+    NHANES dataset never included — family history of SCD, personal
+    arrhythmia, genetic variant flags. This module layers those on top
+    of the ML prediction.
 
-    Both produce a cardiac risk probability (0.0-1.0). The hybrid layer
-    then adds condition-specific boosts (0-60 points) for factors the
-    ML model never saw: family history, genetic variants, symptoms.
-
-WHY TWO MODELS?
-    The NHANES model is strictly better (higher accuracy, more features,
-    more training data). However, it relies on median-imputed features
-    (BMI, waist circumference, CRP) that we can't collect from the form.
-    The Framingham model uses only form-available features and serves as
-    a reliable fallback if the NHANES model file is missing.
+    ML probability (0-1) × 40 = ML base score (0-40)
+    + Rules boosts (family history, symptoms, variants) = 0-60
+    = Hybrid score (0-100), capped at 100
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Dict
 import os
 import joblib
 import pandas as pd
@@ -40,24 +34,16 @@ import pandas as pd
 from services.risk_profiler import UserHealthData
 
 
-# ── Model Paths ────────────────────────────────────────────────────────────
+# ── Model Path ─────────────────────────────────────────────────────────────
 
-# Primary: NHANES XGBoost (better accuracy, uses imputed features)
-NHANES_MODEL_PATH = os.path.abspath(
+MODEL_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "ml", "cardiac_model_nhanes.pkl")
-)
-
-# Fallback: Framingham Random Forest (uses only form-available features)
-FRAMINGHAM_MODEL_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "ml", "cardiac_model.pkl")
 )
 
 # How many points the ML model can contribute (out of 100)
 ML_MAX_SCORE = 40
 
 # Risk-level thresholds for the raw cardiac probability
-# These work for both NHANES (CVD probability) and Framingham (CHD probability)
-# since both output values in roughly similar ranges.
 RISK_TIERS = [
     (0.06, "Low"),
     (0.12, "Low-Moderate"),
@@ -66,65 +52,38 @@ RISK_TIERS = [
     (float("inf"), "High"),
 ]
 
-# ── Model Loading (lazy, two-tier) ────────────────────────────────────────
+# ── Model Loading (lazy, single model) ────────────────────────────────────
 
-_model_package = None       # module-level cache; loaded once on first request
-_model_source = None        # "nhanes" or "framingham"
+_model_package = None  # module-level cache; loaded once on first request
 
 
-def _ensure_model_loaded() -> str:
-    """
-    Load the best available model from disk on first call.
-
-    Tries NHANES XGBoost first, then falls back to Framingham Random Forest.
-
-    Returns:
-        str: Source of the loaded model ("nhanes" or "framingham").
-    """
-    global _model_package, _model_source
+def _ensure_model_loaded() -> None:
+    """Load the NHANES XGBoost model from disk on first call."""
+    global _model_package
     if _model_package is not None:
-        return _model_source
-
-    if os.path.exists(NHANES_MODEL_PATH):
-        _model_package = joblib.load(NHANES_MODEL_PATH)
-        _model_source = "nhanes"
-        return _model_source
-
-    if os.path.exists(FRAMINGHAM_MODEL_PATH):
-        _model_package = joblib.load(FRAMINGHAM_MODEL_PATH)
-        _model_source = "framingham"
-        return _model_source
-
-    raise FileNotFoundError(
-        f"No model found. Tried:\n"
-        f"  1. {NHANES_MODEL_PATH} (NHANES XGBoost)\n"
-        f"  2. {FRAMINGHAM_MODEL_PATH} (Framingham Random Forest)\n"
-        f"Run `python ml/train_nhanes.py` or `python ml/train_model.py` first."
-    )
+        return
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(
+            f"NHANES model not found at {MODEL_PATH}. "
+            f"Run `python ml/train_nhanes.py` first to train and save the model."
+        )
+    _model_package = joblib.load(MODEL_PATH)
 
 
 def model_available() -> bool:
-    """Check if any trained model exists on disk."""
-    return os.path.exists(NHANES_MODEL_PATH) or os.path.exists(FRAMINGHAM_MODEL_PATH)
+    """Check if the NHANES model exists on disk."""
+    return os.path.exists(MODEL_PATH)
 
 
 def get_model_source() -> str:
-    """
-    Return which model is actively loaded ("nhanes", "framingham", or "none").
-    """
-    global _model_source
-    if _model_source is not None:
-        return _model_source
-    try:
-        return _ensure_model_loaded()
-    except FileNotFoundError:
-        return "none"
+    """Return which model is available ("nhanes" or "none")."""
+    return "nhanes" if model_available() else "none"
 
 
 # ── Feature Preparation ────────────────────────────────────────────────────
 
 
-def _prepare_features_nhanes(data: UserHealthData) -> pd.DataFrame:
+def _prepare_features(data: UserHealthData) -> pd.DataFrame:
     """
     Prepare features for the NHANES XGBoost model.
 
@@ -158,41 +117,12 @@ def _prepare_features_nhanes(data: UserHealthData) -> pd.DataFrame:
     return pd.DataFrame([ordered])
 
 
-def _prepare_features_framingham(data: UserHealthData) -> pd.DataFrame:
-    """
-    Prepare features for the Framingham Random Forest model.
-
-    The model was trained on ['age', 'sex', 'trestbps', 'chol', 'thalach'].
-    Maps form fields and converts sex to binary.
-
-    Args:
-        data: Parsed user health data from the intake form.
-
-    Returns:
-        pd.DataFrame with exactly 1 row and the 5 model features.
-    """
-    sex = 1 if data["biological_sex"] == "male" else 0
-
-    features = {
-        "age": data["age"],
-        "sex": sex,
-        "trestbps": data["systolic_bp"],
-        "chol": data["total_cholesterol"],
-        "thalach": data["resting_hr"],
-    }
-
-    return pd.DataFrame([features])
-
-
 # ── ML Prediction ──────────────────────────────────────────────────────────
 
 
 def _get_cardiac_probability(data: UserHealthData) -> float:
     """
-    Run the loaded ML model on the user's data.
-
-    Routes to the correct feature-preparation function based on which
-    model is loaded (NHANES or Framingham).
+    Run the NHANES XGBoost model on the user's data.
 
     Args:
         data: Parsed user health data.
@@ -200,13 +130,8 @@ def _get_cardiac_probability(data: UserHealthData) -> float:
     Returns:
         float: Predicted cardiac risk probability (0.0 - 1.0).
     """
-    source = _ensure_model_loaded()
-
-    if source == "nhanes":
-        X = _prepare_features_nhanes(data)
-    else:
-        X = _prepare_features_framingham(data)
-
+    _ensure_model_loaded()
+    X = _prepare_features(data)
     model = _model_package["model"]
     prob = model.predict_proba(X)[0, 1]
     return float(prob)
@@ -340,8 +265,8 @@ def predict_risk(data: UserHealthData) -> List[dict]:
     """
     Run the hybrid ML + rules predictor.
 
-    Uses the best available ML model (NHANES XGBoost > Framingham Random
-    Forest) and layers condition-specific rules-based boosts on top.
+    Uses the NHANES XGBoost model and layers condition-specific
+    rules-based boosts on top.
 
     Args:
         data: Parsed user health data from the intake form.
@@ -359,8 +284,8 @@ def predict_risk(data: UserHealthData) -> List[dict]:
     """
     # Get the ML cardiac probability (or fallback if model not yet trained)
     if model_available():
-        model_source = get_model_source()
         cardiac_prob = _get_cardiac_probability(data)
+        model_source = "nhanes"
     else:
         cardiac_prob = 0.10  # moderate default
         model_source = "none"

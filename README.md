@@ -23,10 +23,12 @@ Then visit `http://127.0.0.1:5000`.
 - [x] Step 1 — Project skeleton (folder structure, `app.py`, `base.html`)
 - [x] Step 2 — Input form + Module 1 rules-based risk profiler
       (`services/risk_profiler.py` — scores HCM, LQTS, FH out of 3 criteria each)
-- [x] Step 3 — ML training pipeline trained on Framingham Heart Study
-      (`ml/train_model.py` — Random Forest, GridSearchCV, 10-fold CV, 0.715 ROC-AUC)
+- [x] Step 3 — ML training pipeline (originally Framingham Random Forest, now
+      upgraded to NHANES XGBoost with 0.818 ROC-AUC — 0.10 improvement)
+      (`ml/train_nhanes.py` — XGBoost, SMOTE, GridSearchCV, 16,842 samples)
 - [x] Step 4 — ML inference + hybrid predictor wired into results route
-      (`services/predictor.py` — combines ML output with family history / variant boosts)
+      (`services/predictor.py` — combines NHANES XGBoost output with
+      family history / variant boosts)
 - [x] Step 5 — Module 2: ClinVar API (MYH7 only)
       (`services/clinvar_api.py` — fetches real MYH7 variant data from NCBI E-utilities;
       displays total variant count, clinical significance breakdown, and notable variants
@@ -83,9 +85,10 @@ Then visit `http://127.0.0.1:5000`.
 cardiogenome/
 ├── app.py                  # Flask routes only — no business logic
 ├── requirements.txt
-├── ml/                     # Training pipeline + saved model (cardiac_model.pkl) + model card
-│   ├── train_model.py      # Full pipeline: load, clean, train, tune, save
-│   ├── cardiac_model.pkl   # Trained Random Forest (5 features, 0.715 ROC-AUC)
+├── ml/                     # Training pipeline + saved model + model card
+│   ├── train_nhanes.py     # NHANES XGBoost pipeline: load, clean, train,
+│   │                       #   tune (GridSearchCV), save (0.818 ROC-AUC)
+│   ├── cardiac_model_nhanes.pkl  # Trained XGBoost (7 features, 0.818 ROC-AUC)
 │   └── README.md           # Detailed model card with metrics & limitations
 ├── services/               # Business logic: risk rules, ML inference, API calls
 │   ├── risk_profiler.py    # Module 1: rules-based scoring (0-3 per condition)
