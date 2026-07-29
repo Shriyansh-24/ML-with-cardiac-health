@@ -1,6 +1,110 @@
-# Model Card — Cardiac Risk Random Forest (v2)
+# Model Card — Cardiac Risk Models (v3)
 
-## Dataset
+## Overview
+
+CardioGenome now uses a **two-tier ML architecture**:
+
+1. **Primary: NHANES XGBoost** — a gradient-boosted tree trained on CDC NHANES
+   survey data (2017–2023). Better accuracy, more training data, more features.
+2. **Fallback: Framingham Random Forest** — the original model, used if the
+   NHANES model file is unavailable.
+
+Both models predict a cardiac risk probability (0–100%) that feeds into the
+hybrid scoring system (ML base + condition-specific rules boosts).
+
+---
+
+## Model 1: NHANES XGBoost *(primary)*
+
+### Dataset
+
+**NHANES 2017–2023** (CDC National Health and Nutrition Examination Survey)
+
+- **Source:** [Kaggle — nhanes-cvd-raw-data-2017-23](https://www.kaggle.com/datasets/ahiduzzaman28/nhanes-cvd-raw-data-2017-23)
+- **Samples:** 27,493 raw → 16,842 after dropping missing/refused CVD answers
+  and filtering to adults (20–80 years)
+- **Target:** Composite CVD — any self-reported diagnosis of congestive heart
+  failure, coronary heart disease, heart attack, stroke, or angina
+  - 0 = no CVD (87.8%)
+  - 1 = CVD present (12.2%)
+- **Population:** Multi-ethnic US nationally representative survey (vs
+  Framingham's predominantly white Massachusetts cohort)
+- **Timeframe:** 2017–2023 (vs Framingham's original 1948 cohort)
+
+### Features Used
+
+| Feature | In intake form? | Source | Imputed at inference? |
+|---|---|---|---|
+| **Age** (years) | ✅ Yes | Form field | No |
+| **Systolic_BP** (mmHg) | ✅ Yes | Form field | No |
+| **Total_Colesterol** (mg/dL) | ✅ Yes | Form field | No |
+| BMI (kg/m²) | ❌ No | NHANES exam | Yes — median (28.2) |
+| Diastolic_BP (mmHg) | ❌ No | NHANES exam | Yes — median (74) |
+| Waist_circ (cm) | ❌ No | NHANES exam | Yes — median (99.1) |
+| C_Reactive (mg/dL) | ❌ No | NHANES lab | Yes — median (0.21) |
+
+**Note:** Features not collected in the form are imputed with training-set
+medians at inference time. This is suboptimal but still allows the model to
+use the 3 form-mapped features and benefit from the larger training set.
+
+### Model Architecture
+
+- **Algorithm:** XGBoost Classifier (`xgboost==3.3.0`)
+- **Hyperparameters** (tuned via GridSearchCV, 108 combinations):
+  - `n_estimators`: 100
+  - `max_depth`: 4
+  - `learning_rate`: 0.05
+  - `subsample`: 0.7
+  - `colsample_bytree`: 0.7
+  - `scale_pos_weight`: auto (neg/pos ratio ≈ 7.2)
+- **SMOTE oversampling** applied during training to handle class imbalance
+- **Median imputation** for missing values (stored per-feature for inference)
+
+### Performance
+
+| Metric | Default params | Tuned (GridSearchCV) |
+|---|---|---|
+| **ROC-AUC** (10-fold CV) | 0.761 ± 0.018 | — |
+| **ROC-AUC** (5-fold CV, tuning) | — | **0.795** |
+| **ROC-AUC** (held-out test set) | 0.762 | **0.818** |
+| **Accuracy** (held-out test set) | 0.611 | 0.392* |
+
+*\*Accuracy drops with tuning because the model becomes more aggressive at
+predicting CVD (higher recall, lower precision). With 12% prevalence,
+accuracy is a misleading metric — ROC-AUC gives the honest picture.*
+
+#### Comparison with previous model
+
+| Model | Dataset | Samples | Features | ROC-AUC (CV) | ROC-AUC (test) |
+|---|---|---|---|---|---|
+| **XGBoost (tuned)** | NHANES 2017-23 | 16,842 | 7 | 0.761 ± 0.018 | **0.818** |
+| Random Forest (tuned) | Framingham | 4,189 | 18 | 0.717 ± 0.042 | 0.715 |
+| Random Forest (5-feat) | Framingham | 4,189 | 5 | 0.715 ± 0.041 | — |
+
+**Improvement:** +0.10 ROC-AUC over the Framingham model.
+
+### Feature Importance (tuned XGBoost)
+
+| Rank | Feature | Importance |
+|------|---------|:----------:|
+| 1 | **Age** | **0.508** |
+| 2 | Total_Colesterol | 0.100 |
+| 3 | Diastolic_BP | 0.088 |
+| 4 | Waist_circ | 0.085 |
+| 5 | C_Reactive | 0.084 |
+| 6 | Systolic_BP | 0.076 |
+| 7 | BMI | 0.060 |
+
+**Interpretation:** Age is overwhelmingly dominant (>50% of importance),
+consistent with clinical knowledge. The 6 remaining features each contribute
+6–10%, with cholesterol, blood pressure, and waist circumference being the
+most informative of the modifiable factors.
+
+---
+
+## Model 2: Framingham Random Forest *(fallback)*
+
+### Dataset
 
 **Framingham Heart Study** (GitHub public mirror)
 
@@ -9,132 +113,73 @@
 - **Target:** Binary — 10-year coronary heart disease (CHD) risk
   - 0 = no CHD within 10 years (84.9%)
   - 1 = CHD within 10 years (15.1%)
-- **Fallback:** Cleveland Heart Disease dataset (297 samples) — used when
-  Framingham URL is unreachable.
 
-**Why Framingham instead of Cleveland?** The Cleveland dataset (used in v1)
-predicted *diagnosed* heart disease from clinical measurements. Framingham
-predicts *10-year future risk* from lifestyle + clinical factors — which is
-closer to what the app does. It's also 14x larger.
+### Features Used
 
-## Features Used
+| Form field | Model feature | Description |
+|---|---|---|
+| age | age | Age in years |
+| biological_sex | sex | 1 = male, 0 = female |
+| resting_hr | thalach | Resting heart rate (bpm) |
+| systolic_bp | trestbps | Systolic blood pressure (mmHg) |
+| total_cholesterol | chol | Serum cholesterol (mg/dL) |
 
-### Core features (from the intake form):
+### Performance
 
-| Form field          | Model feature | Description                    |
-|---------------------|---------------|--------------------------------|
-| age                 | age           | Age in years                   |
-| biological_sex      | sex           | 1 = male, 0 = female          |
-| resting_hr          | thalach       | Resting heart rate (bpm)       |
-| systolic_bp         | trestbps      | Systolic blood pressure (mmHg) |
-| total_cholesterol   | chol          | Serum cholesterol (mg/dL)      |
+| Metric | Value |
+|---|---|
+| **ROC-AUC** (10-fold CV) | 0.715 ± 0.041 |
+| **Accuracy** (10-fold CV) | 0.689 ± 0.024 |
 
-### Extra features (from Framingham, used when available):
+---
 
-| Feature         | Description                     |
-|-----------------|---------------------------------|
-| BMI             | Body mass index                 |
-| glucose         | Serum glucose (mg/dL)           |
-| diabetes        | Binary: 1 = diabetic            |
-| currentSmoker   | Binary: 1 = current smoker      |
-| cigsPerDay      | Cigarettes per day              |
-| prevalentHyp    | Binary: 1 = hypertensive        |
-| diaBP           | Diastolic blood pressure (mmHg) |
+## How the hybrid system uses both models
 
-### Engineered features (derived):
+```
+User form data
+     │
+     ▼
+NHANES XGBoost ──► Cardiac probability (0–100%)
+    (primary)          │
+                       │ × 0.4 = ML base score (0–40)
+                       │
+Framingham RF ◄────────┤ (fallback if NHANES missing)
+                       │
+                       ▼
+           ┌──────────────────────┐
+           │ Condition-specific   │
+           │ rules boosts (0–60)  │
+           │  • Family history    │
+           │  • Personal symptoms │
+           │  • Genetic variants  │
+           └──────────────────────┘
+                       │
+                       ▼
+              Hybrid score (0–100)
+              per condition (HCM, LQTS, FH)
+```
 
-| Feature            | Formula                          | Rationale                                 |
-|--------------------|----------------------------------|-------------------------------------------|
-| pulse_pressure     | trestbps - diaBP                 | Arterial stiffness marker                 |
-| smoking_severity   | currentSmoker × cigsPerDay       | Captures dose beyond binary yes/no        |
-| age_x_bp           | age × trestbps / 100             | High BP is worse at older ages            |
-| age_x_bmi          | age × BMI / 100                  | Obesity is worse at older ages            |
-| age_x_chol         | age × chol / 100                 | High cholesterol at older age amplifies risk |
-| bmi_category       | 0-3 ordinal: underweight to obese | Non-linear BMI effects                   |
+## Limitations (both models)
 
-## Model Architecture
+1. **Moderate accuracy.** ~0.82 ROC-AUC is meaningful but far from
+   clinical-grade (0.90+). The model should not be used for real medical
+   decisions.
 
-- **Algorithm:** Random Forest Classifier (`scikit-learn`)
-- **Trees:** 300 (found optimal by GridSearchCV)
-- **Max depth:** 5
-- **Max features:** `sqrt`
-- **Min samples split/leaf:** 5 / 2
-- **Class weight:** Balanced
-- **Random state:** 42 (fixed for reproducibility)
+2. **Imputed features.** The NHANES model uses median-imputed values for
+   BMI, waist circumference, diastolic BP, and CRP — these are not actual
+   patient measurements. A form collecting height/weight and waist
+   circumference would unlock full feature usage.
 
-## Performance
+3. **Self-reported data.** Both the NHANES target (CVD diagnosis) and
+   Framingham target (CHD events) rely on self-report or clinical
+   documentation. Measurement error reduces real-world performance.
 
-### 10-fold stratified cross-validation
+4. **Population.** NHANES is more diverse than Framingham but still a US
+   survey. Results may not generalise to non-US populations.
 
-| Model Version          | Features | Accuracy (CV) | ROC-AUC (CV) |
-|------------------------|:--------:|:-------------:|:------------:|
-| **Default params**     | 18       | 0.682 ± 0.026 | 0.718 ± 0.042 |
-| **Tuned (GridSearchCV)** | 18     | 0.678 ± 0.029 | 0.717 ± 0.042 |
-| Default params (5-feat) | 5       | 0.689 ± 0.024 | 0.715 ± 0.041 |
+5. **Not a diagnosis.** The ML model predicts a probability, not a
+   diagnosis. Low probability doesn't rule out existing conditions.
 
-### Key observations
-
-1. **Adding more features (5 → 18) barely helped** — ROC-AUC went from
-   0.715 to 0.718. The extra features (BMI, smoking, glucose, derived
-   interactions) added information, but the model was already close to
-   what 5 core features can achieve.
-
-2. **Hyperparameter tuning didn't help** — the default Random Forest params
-   (100 trees, depth 5) were already near-optimal for this data.
-
-3. **The ceiling is ~0.72 ROC-AUC** — with self-reportable features alone
-   (age, sex, BP, cholesterol, heart rate, BMI, smoking), you can't predict
-   10-year cardiac risk much better than this. Clinical data (ECG, imaging,
-   stress tests, genetic markers) would be needed to go higher.
-
-4. **The simpler 5-feature model is almost as good** — for the app's
-   purposes, the 5 core features (available on every form submission)
-   capture ~99% of the signal. The extra features are optional
-   improvements.
-
-### Feature importance (tuned model, top 10)
-
-| Rank | Feature         | Importance |
-|------|-----------------|:----------:|
-| 1    | age_x_bp        | 0.206      |
-| 2    | age             | 0.123      |
-| 3    | age_x_bmi       | 0.088      |
-| 4    | trestbps        | 0.079      |
-| 5    | age_x_chol      | 0.076      |
-| 6    | pulse_pressure  | 0.064      |
-| 7    | cigsPerDay      | 0.045      |
-| 8    | smoking_severity| 0.045      |
-| 9    | glucose         | 0.044      |
-| 10   | diaBP           | 0.042      |
-
-**Interpretation:** The age × BP interaction is the single strongest
-predictor — the same blood pressure carries more risk at older ages. Raw
-age itself is second. Most of the top features are age-related interactions,
-confirming that age is the dominant risk factor and it amplifies the
-impact of other factors.
-
-## Limitations
-
-1. **Modest accuracy.** ~0.72 ROC-AUC is meaningful (well above random
-   0.50) but far from clinical-grade (0.90+). The model should not be used
-   for real medical decisions.
-
-2. **Class imbalance.** 15% disease prevalence means the naive baseline
-   (always predict "no disease") achieves 85% accuracy. Our model's ~68%
-   accuracy is below this baseline — accuracy is a misleading metric here.
-   ROC-AUC (0.72) is the honest picture.
-
-3. **Missing factors.** The model can't account for family history, genetic
-   markers, ECG results, or lifestyle factors beyond smoking — all of which
-   are strong predictors of cardiac risk. The rules-based profiler (Module 1)
-   handles family history separately.
-
-4. **Population.** Framingham is a predominantly white, US-based cohort
-   studied since 1948. Results may not generalise to other populations.
-
-5. **10-year risk, not a diagnosis.** The target is future risk, not current
-   disease. A low risk score doesn't rule out existing conditions.
-
-6. **Self-reported data.** The model is trained on clinical measurements,
-   but the app uses self-reported values. Measurement error will reduce
-   real-world performance further.
+6. **Missing factors.** Neither model can account for genetic variants,
+   detailed family history (beyond yes/no), ECG results, or imaging —
+   all strong predictors the hybrid rules layer attempts to compensate for.
