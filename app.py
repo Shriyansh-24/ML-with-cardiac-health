@@ -114,7 +114,7 @@ def results() -> str:
 
 
 if __name__ == "__main__":
-    # debug=True gives auto-reload + interactive tracebacks while developing.
-    # IMPORTANT: turn this off (or don't use it) before any real deployment —
-    # the interactive debugger can execute arbitrary code if exposed publicly.
-    app.run(debug=True)
+    # Debug mode controlled by env var — off by default for production safety.
+    # Set FLASK_DEBUG=1 to enable the interactive debugger in development.
+    debug_enabled = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.run(debug=debug_enabled)
