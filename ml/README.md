@@ -32,14 +32,15 @@ model achieves **0.818 ROC-AUC**, a **+0.10 improvement** over the prior model.
 | **Age** (years) | ✅ Yes | Form field | No |
 | **Systolic_BP** (mmHg) | ✅ Yes | Form field | No |
 | **Total_Colesterol** (mg/dL) | ✅ Yes | Form field | No |
-| BMI (kg/m²) | ❌ No | NHANES exam | Yes — median (28.2) |
+| BMI (kg/m²) | ⚠️ Calculated | Height + weight form fields | No — calculated if provided, median (28.2) if not |
 | Diastolic_BP (mmHg) | ❌ No | NHANES exam | Yes — median (74) |
 | Waist_circ (cm) | ❌ No | NHANES exam | Yes — median (99.1) |
 | C_Reactive (mg/dL) | ❌ No | NHANES lab | Yes — median (0.21) |
 
 **Note:** Features not collected in the form are imputed with training-set
 medians at inference time. This is suboptimal but still allows the model to
-use the 3 form-mapped features and benefit from the larger training set.
+use the 4 form-mapped features (age, blood pressure, cholesterol, BMI) and
+benefit from the larger training set.
 
 ## Model Architecture
 
@@ -124,9 +125,10 @@ NHANES XGBoost ──► Cardiac probability (0–100%)
    decisions.
 
 2. **Imputed features.** The NHANES model uses median-imputed values for
-   BMI, waist circumference, diastolic BP, and CRP — these are not actual
-   patient measurements. A form collecting height/weight and waist
-   circumference would unlock full feature usage.
+   waist circumference, diastolic BP, and CRP — these are not actual
+   patient measurements. BMI is now **calculated from form-provided
+   height and weight** when both fields are filled in, falling back to
+   the stored median (28.2) if either is missing.
 
 3. **Self-reported data.** The NHANES target (CVD diagnosis) relies on
    self-report. Measurement error reduces real-world performance.
