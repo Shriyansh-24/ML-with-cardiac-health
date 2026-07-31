@@ -44,9 +44,13 @@ def _load_data() -> dict[str, Any]:
 
 def _simple_bar_chart(
     chart_def: dict[str, Any],
-    height: int = 320,
+    height: int = 300,
 ) -> str:
     """Build a simple vertical bar chart from {label, value, marker_color} items.
+
+    The title/subtitle are NOT baked into the Plotly figure — they are shown
+    by the results template in a card header instead, so we keep them out of
+    the SVG and avoid duplicate titles.
 
     Args:
         chart_def: Chart definition from the JSON (title, subtitle, data list).
@@ -65,17 +69,13 @@ def _simple_bar_chart(
                 marker_color=[d.get("marker_color", "#3498db") for d in data],
                 text=[f"{d['value']}%" for d in data],
                 textposition="outside",
+                cliponaxis=False,
                 hovertemplate="<b>%{x}</b><br>%{yaxis.title.text}: %{y}%<extra></extra>",
             )
         ]
     )
 
     fig.update_layout(
-        title={
-            "text": chart_def.get("title", ""),
-            "font": {"size": 14, "family": FONT_FAMILY},
-            "y": 0.95,
-        },
         yaxis={
             "title": chart_def.get("yaxis_label", "%"),
             "range": [0, 100],
@@ -87,7 +87,7 @@ def _simple_bar_chart(
             "categoryarray": [d["label"] for d in data],
         },
         height=height,
-        margin={"t": 50, "b": 40, "l": 50, "r": 20},
+        margin={"t": 12, "b": 40, "l": 44, "r": 12},
         font={"family": FONT_FAMILY},
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
@@ -99,7 +99,7 @@ def _simple_bar_chart(
 
 def _grouped_bar_chart(
     chart_def: dict[str, Any],
-    height: int = 320,
+    height: int = 300,
 ) -> str:
     """Build a grouped bar chart comparing two series (e.g. trial vs population).
 
@@ -128,16 +128,12 @@ def _grouped_bar_chart(
                 else "#bbb",
                 text=[f"{g.get(series_key, 0)}%" for g in groups],
                 textposition="outside",
+                cliponaxis=False,
                 hovertemplate=f"<b>%{{x}}</b><br>{series_label}: %{{y}}%<extra></extra>",
             )
         )
 
     fig.update_layout(
-        title={
-            "text": chart_def.get("title", ""),
-            "font": {"size": 14, "family": FONT_FAMILY},
-            "y": 0.95,
-        },
         yaxis={
             "title": chart_def.get("yaxis_label", "%"),
             "range": [0, 85],
@@ -146,7 +142,9 @@ def _grouped_bar_chart(
         },
         barmode="group",
         height=height,
-        margin={"t": 50, "b": 40, "l": 50, "r": 20},
+        # The horizontal legend sits above the plot (y: 1.02), so we keep a
+        # taller top margin here than in _simple_bar_chart to avoid clipping.
+        margin={"t": 40, "b": 40, "l": 44, "r": 12},
         font={"family": FONT_FAMILY},
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
@@ -161,6 +159,85 @@ def _grouped_bar_chart(
     )
 
     return pio.to_html(fig, include_plotlyjs=False, full_html=False)
+
+
+def _compute_highlights(charts_defs: dict[str, Any]) -> list[dict[str, str]]:
+    """Derive 4 headline 'takeaway' stats from the raw chart data.
+
+    These power the summary cards at the top of the equity tab, so a visitor
+    gets the punchline before scrolling into the full charts.
+
+    Args:
+        charts_defs: The raw charts dict from data/equity.json.
+
+    Returns:
+        list of dicts: [{label, value, note}, ...]
+    """
+    highlights: list[dict[str, str]] = []
+
+    # ── Racial gap in testing access ──
+    race = charts_defs.get("testing_by_race", {}).get("data", [])
+    if race:
+        best = max(race, key=lambda d: d["value"])
+        worst = min(race, key=lambda d: d["value"])
+        ratio = best["value"] / worst["value"] if worst["value"] else 0
+        highlights.append({
+            "label": "Race gap in testing",
+            "value": f"{best['value']}% vs {worst['value']}%",
+            "note": (
+                f"{best['label']} patients are {ratio:.1f}× more likely to receive "
+                f"genetic testing than {worst['label']} patients."
+            ),
+        })
+
+    # ── Income divide in access ──
+    income = charts_defs.get("testing_by_income", {}).get("data", [])
+    if income:
+        best = max(income, key=lambda d: d["value"])
+        worst = min(income, key=lambda d: d["value"])
+        gap = best["value"] - worst["value"]
+        highlights.append({
+            "label": "Income divide",
+            "value": f"{gap} pt gap",
+            "note": (
+                f"Testing access ranges from {worst['value']}% ({worst['label']}) "
+                f"to {best['value']}% ({best['label']})."
+            ),
+        })
+
+    # ── Trial representation imbalance ──
+    groups = charts_defs.get("trial_representation", {}).get("data", {}).get("groups", [])
+    if groups:
+        over = max(groups, key=lambda g: (g.get("trial_pct", 0) - g.get("population_pct", 0)))
+        under = min(groups, key=lambda g: (g.get("trial_pct", 0) - g.get("population_pct", 0)))
+        over_delta = over.get("trial_pct", 0) - over.get("population_pct", 0)
+        under_delta = under.get("population_pct", 0) - under.get("trial_pct", 0)
+        highlights.append({
+            "label": "Trial representation",
+            "value": f"+{over_delta}pt / -{under_delta}pt",
+            "note": (
+                f"{over['label']} patients make up {over['trial_pct']}% of trial "
+                f"participants vs {over['population_pct']}% of the U.S. population — "
+                f"while {under['label']} patients are the most under-represented."
+            ),
+        })
+
+    # ── Global access gap ──
+    glob = charts_defs.get("global_access", {}).get("data", [])
+    if glob:
+        best = max(glob, key=lambda d: d["value"])
+        worst = min(glob, key=lambda d: d["value"])
+        ratio = best["value"] / worst["value"] if worst["value"] else 0
+        highlights.append({
+            "label": "Global access gap",
+            "value": f"{ratio:.1f}×",
+            "note": (
+                f"Eligible patients in {best['label']} are about {ratio:.1f}× more "
+                f"likely to access gene therapies than those in {worst['label']}."
+            ),
+        })
+
+    return highlights
 
 
 def build_equity_dashboard() -> dict[str, Any]:
@@ -213,6 +290,7 @@ def build_equity_dashboard() -> dict[str, Any]:
 
     return {
         "charts": output_charts,
+        "highlights": _compute_highlights(charts_defs),
         "metadata": metadata,
         "has_data": bool(output_charts),
     }
