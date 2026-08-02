@@ -54,6 +54,13 @@ def _friendly_error(error: Exception) -> str:
     """Map raw Supabase/gotrue exceptions to human-readable messages."""
     msg = str(error)
     low = msg.lower()
+    if "invalid api key" in low or ("apikey" in low and "invalid" in low):
+        return (
+            "Invalid API key — the SUPABASE_URL / SUPABASE_ANON_KEY values on "
+            "the server don't match your Supabase project. Re-copy both from "
+            "Supabase → Project Settings → API (no extra spaces, quotes, or "
+            "line breaks), then redeploy."
+        )
     if "invalid login credentials" in low:
         return "Incorrect email or password."
     if "email not confirmed" in low:
