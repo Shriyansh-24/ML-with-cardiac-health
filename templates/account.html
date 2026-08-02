@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{#
+   account.html — Phase 2 account settings.
+
+   Lets the user change their anonymous research opt-in at any time (not
+   just at signup). The current value comes from current_user.research_opt_in,
+   injected by the app-wide context processor. Submitting the form POSTs to
+   /account, which writes the new value into the user's Supabase metadata.
+#}
+
+{% block title %}CardioGenome — Account Settings{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card">
+        <h2>Account settings</h2>
+        <p class="auth-sub">
+            Signed in as <strong>{{ current_user.email }}</strong>
+        </p>
+
+        <hr class="auth-divider">
+
+        <h3 class="account-section-title">🧬 Research contribution</h3>
+
+        <form method="post" action="{{ url_for('account') }}" class="account-form">
+            <label class="toggle-row">
+                <input type="checkbox" name="research_opt_in" value="yes"
+                       class="toggle-input"
+                       {% if current_user.research_opt_in %}checked{% endif %}>
+                <span class="toggle-track" aria-hidden="true">
+                    <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-label">
+                    <strong>Contribute anonymously to cardiac research</strong>
+                    <span class="toggle-hint">
+                        When on, your health summary and risk scores are stored
+                        in a separate anonymised dataset — with no name, email,
+                        or account link — to help study cardiac risk.
+                    </span>
+                </span>
+            </label>
+
+            <p class="toggle-note">
+                Changing this affects <em>future</em> reports only. Reports you
+                already saved (and any anonymised copies already contributed)
+                are not retroactively added or removed.
+            </p>
+
+            <button type="submit" class="btn-auth">Save settings</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

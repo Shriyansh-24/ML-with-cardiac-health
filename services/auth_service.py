@@ -303,6 +303,66 @@ def delete_report(report_id: str) -> bool:
         return False
 
 
+def update_research_opt_in(opt_in: bool):
+    """
+    Change whether the current user consents to anonymous research.
+
+    Writes the preference into the user's Supabase metadata
+    (research_opt_in), which get_current_user() reads back on every request
+    and save_report() checks before contributing an anonymised copy to
+    research_data — so toggling here takes effect on the very next save.
+
+    Args:
+        opt_in: True to contribute anonymised reports to research.
+
+    Returns:
+        (user_dict, error_message). user_dict reflects the new setting.
+    """
+    if not is_configured():
+        return None, "Accounts are not enabled yet."
+    if not get_current_user():
+        return None, "Please sign in first."
+
+    client = _authed_client()
+    if client is None:
+        return None, "Please sign in first."
+
+    try:
+        res = client.auth.update_user({
+            "data": {"research_opt_in": bool(opt_in)},
+        })
+    except Exception as first_error:
+        # Access token may have expired — refresh once and retry, mirroring
+        # the fallback used in get_current_user().
+        try:
+            refresh = _client().auth.refresh_session(session.get(SESSION_REFRESH, ""))
+            if refresh.session:
+                _store_session(refresh.session)
+            res = _authed_client().auth.update_user({
+                "data": {"research_opt_in": bool(opt_in)},
+            })
+        except Exception:
+            return None, _friendly_error(first_error)
+
+    # Invalidate the per-request cache so the rest of this request sees the
+    # new value (matching the style used in get_current_user's failure path).
+    if hasattr(g, "current_user"):
+        del g.current_user
+
+    user = res.user
+    if user is None:
+        return None, "Could not update your settings. Please try again."
+
+    meta = user.user_metadata or {}
+    result = {
+        "id": user.id,
+        "email": user.email,
+        "research_opt_in": bool(meta.get("research_opt_in", False)),
+    }
+    g.current_user = result
+    return result, None
+
+
 def _contribute_research(summary: dict, conditions: list) -> None:
     """
     Insert an ANONYMOUS copy of a report into research_data.

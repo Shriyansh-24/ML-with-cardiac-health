@@ -38,6 +38,7 @@
                 {% if current_user %}
                 <span class="nav-user" title="Signed in">👤 {{ current_user.email }}</span>
                 <a href="{{ url_for('history') }}">My reports</a>
+                <a href="{{ url_for('account') }}">Settings</a>
                 <form method="post" action="{{ url_for('logout') }}" class="nav-form">
                     <button type="submit" class="nav-btn">Log out</button>
                 </form>

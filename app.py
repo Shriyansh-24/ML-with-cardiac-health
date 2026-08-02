@@ -304,6 +304,34 @@ def save_report() -> str:
     return redirect(url_for("report_detail", report_id=report_id))
 
 
+@app.route("/account", methods=["GET", "POST"])
+def account() -> str:
+    """
+    Account settings page — lets the user change their research opt-in.
+
+    The preference is stored in the user's Supabase metadata and read back
+    by auth_service on every save, so toggling it here takes effect on the
+    next report they save (no historical data is retroactively affected).
+    """
+    if not auth_service.get_current_user():
+        return redirect(url_for("login", next=url_for("account")))
+
+    if request.method == "POST":
+        research_opt_in = request.form.get("research_opt_in") == "yes"
+        user, error = auth_service.update_research_opt_in(research_opt_in)
+        if error:
+            flash(error, "error")
+        else:
+            flash(
+                "Research contribution turned "
+                + ("ON — thank you!" if user["research_opt_in"] else "OFF."),
+                "success",
+            )
+        return redirect(url_for("account"))
+
+    return render_template("account.html")
+
+
 @app.route("/history")
 def history() -> str:
     """

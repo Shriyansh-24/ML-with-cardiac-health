@@ -1964,3 +1964,95 @@ details[open] .research-body {
     color: #333;
     text-decoration: underline;
 }
+
+/* ── Account settings page ── */
+.auth-divider {
+    border: none;
+    border-top: 1px solid #e5e5e5;
+    margin: 16px 0;
+}
+
+.account-section-title {
+    margin: 0 0 12px;
+    color: #333;
+}
+
+.account-form .btn-auth {
+    margin-top: 16px;
+}
+
+/* Toggle switch */
+.toggle-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+}
+
+/* Visually-hidden but still focusable — 0x0 boxes can drop keyboard focus
+   in some browsers, which would break the :focus-visible outline below. */
+.toggle-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.toggle-track {
+    position: relative;
+    flex-shrink: 0;
+    width: 44px;
+    height: 24px;
+    margin-top: 2px;
+    background: #ccc;
+    border-radius: 24px;
+    transition: background 0.2s ease;
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease;
+}
+
+.toggle-input:checked + .toggle-track {
+    background: #c0392b;
+}
+
+.toggle-input:checked + .toggle-track .toggle-thumb {
+    transform: translateX(20px);
+}
+
+.toggle-input:focus-visible + .toggle-track {
+    outline: 2px solid #c0392b;
+    outline-offset: 2px;
+}
+
+.toggle-label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.95em;
+    color: #333;
+}
+
+.toggle-hint {
+    margin-top: 4px;
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.5;
+}
+
+.toggle-note {
+    margin: 14px 0 0;
+    font-size: 0.85em;
+    color: #888;
+    line-height: 1.5;
+}
