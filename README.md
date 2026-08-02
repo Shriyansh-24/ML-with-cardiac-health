@@ -35,6 +35,7 @@ are opt-in and turn on automatically once you connect Supabase:
    SUPABASE_ANON_KEY=<anon public key>
    SUPABASE_SERVICE_ROLE_KEY=<service role key>   # server-side research inserts only
    SECRET_KEY=<long random string>                # signs session cookies
+   SESSION_COOKIE_SECURE=true                     # ONLY on Render (HTTPS); leave unset locally
    ```
 
    > ⚠️ The service-role key **bypasses row-level security** — it is used

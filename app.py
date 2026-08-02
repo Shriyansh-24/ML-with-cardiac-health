@@ -29,9 +29,10 @@ app = Flask(__name__)
 # In production this MUST be set via the SECRET_KEY env var — the fallback
 # is only safe for local development.
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-insecure-secret-change-me")
-# Render serves over HTTPS — only send the session cookie over TLS in prod.
-# (Off in debug so local http:// development still works.)
-app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FLASK_DEBUG", "0") != "1"
+# Send the session cookie only over HTTPS in production (set
+# SESSION_COOKIE_SECURE=true on Render). Off by default so plain
+# http://127.0.0.1 local development keeps working.
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
 
 
 @app.context_processor
