@@ -1499,3 +1499,468 @@ details[open] .research-body {
 .gwas-or {
     color: #666;
 }
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* ════════════════  Phase 2 — Accounts & Saved Reports  ═══════════ */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Site header nav ── */
+.site-header-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 20px;
+}
+
+.site-brand h1 {
+    margin: 0;
+}
+
+.site-brand .tagline {
+    margin: 2px 0 0;
+}
+
+.site-nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.95em;
+}
+
+.site-nav a {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 4px 2px;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.15s ease;
+}
+
+.site-nav a:hover {
+    border-bottom-color: #c0392b;
+}
+
+.site-nav .nav-cta {
+    background: #c0392b;
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 6px;
+    border-bottom: none;
+    transition: background 0.15s ease;
+}
+
+.site-nav .nav-cta:hover {
+    background: #a5311f;
+}
+
+.nav-user {
+    color: #666;
+    font-size: 0.9em;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-form {
+    display: inline;
+    margin: 0;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: #c0392b;
+    font-size: 0.95em;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 2px;
+    font-family: inherit;
+}
+
+.nav-btn:hover {
+    text-decoration: underline;
+}
+
+/* ── Flash messages ── */
+.flash-wrap {
+    max-width: 960px;
+    margin: 14px auto 0;
+    padding: 0 20px;
+}
+
+.flash {
+    padding: 10px 16px;
+    border-radius: 6px;
+    margin: 0 0 8px;
+    font-size: 0.95em;
+}
+
+.flash--success {
+    background: #d4edda;
+    border: 1px solid #b8dcc4;
+    color: #155724;
+}
+
+.flash--error {
+    background: #fdecea;
+    border: 1px solid #e6b0aa;
+    color: #922b21;
+}
+
+.flash--info {
+    background: #eaf2f8;
+    border: 1px solid #aed6f1;
+    color: #1a5276;
+}
+
+/* ── Auth pages (login / signup) ── */
+.auth-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0 20px;
+}
+
+.auth-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 28px 30px;
+    width: 100%;
+    max-width: 440px;
+}
+
+.auth-card h2 {
+    margin: 0 0 4px;
+    color: #333;
+}
+
+.auth-sub {
+    color: #666;
+    font-size: 0.95em;
+    margin: 0 0 16px;
+}
+
+.auth-unavailable {
+    background: #fdf3e7;
+    border: 1px solid #f0d9b5;
+    color: #7a5c2e;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 0.95em;
+}
+
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+    display: block;
+    margin-top: 4px;
+    padding: 8px 10px;
+    font-size: 1em;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.btn-auth {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 24px;
+    font-size: 1em;
+    font-weight: 600;
+    color: #fff;
+    background-color: #c0392b;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.btn-auth:hover {
+    background-color: #a5311f;
+}
+
+.auth-switch {
+    margin-top: 18px;
+    font-size: 0.95em;
+    color: #555;
+}
+
+.auth-switch a {
+    color: #c0392b;
+    font-weight: 600;
+}
+
+.research-consent {
+    margin-top: 18px;
+    background: #f7faf7;
+    border: 1px solid #d5e8d5;
+    border-radius: 6px;
+    padding: 12px 14px;
+}
+
+.consent-checkbox {
+    display: flex !important;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 0.9em;
+    color: #444;
+    line-height: 1.5;
+}
+
+.consent-checkbox input {
+    margin-top: 3px;
+}
+
+.form-info {
+    background: #eaf2f8;
+    border: 1px solid #aed6f1;
+    color: #1a5276;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 0.95em;
+}
+
+/* ── History page ── */
+.history-empty {
+    background: #fff;
+    border: 1px dashed #ccc;
+    border-radius: 10px;
+    padding: 32px 24px;
+    text-align: center;
+    color: #666;
+}
+
+.history-empty .btn-auth {
+    margin-top: 8px;
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.history-item:hover {
+    border-color: #c0392b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.history-link {
+    flex: 1;
+    text-decoration: none;
+    color: inherit;
+}
+
+.history-main {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.history-date {
+    color: #888;
+    font-size: 0.9em;
+    font-variant-numeric: tabular-nums;
+}
+
+.history-score {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #333;
+}
+
+.history-level {
+    font-size: 0.75em;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-left: 6px;
+    vertical-align: 2px;
+}
+
+.history-level--low            { background: #d4edda; color: #155724; }
+.history-level--low_moderate   { background: #fff3cd; color: #856404; }
+.history-level--moderate       { background: #ffeeba; color: #856404; }
+.history-level--elevated       { background: #fdecea; color: #922b21; }
+.history-level--high           { background: #f8d7da; color: #721c24; }
+
+.history-source {
+    font-size: 0.8em;
+    color: #555;
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.history-delete button {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 0.95em;
+    padding: 4px;
+}
+
+.history-delete button:hover {
+    color: #c0392b;
+}
+
+.back-link {
+    margin: 0 0 14px;
+}
+
+.back-link a {
+    color: #c0392b;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.back-link a:hover {
+    text-decoration: underline;
+}
+
+/* ── Save report bar (results page) ── */
+.save-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #fdf3e7;
+    border: 1px solid #f0d9b5;
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+}
+
+.save-bar-text {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.95em;
+    color: #7a5c2e;
+}
+
+.save-bar-text strong {
+    color: #5d4522;
+    font-size: 1.05em;
+}
+
+.save-bar-text span {
+    opacity: 0.9;
+}
+
+.save-btn {
+    display: inline-block;
+    padding: 9px 20px;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: #fff;
+    background: #c0392b;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+}
+
+.save-btn:hover {
+    background: #a5311f;
+}
+
+.save-btn--link {
+    background: #7a5c2e;
+}
+
+.save-btn--link:hover {
+    background: #5d4522;
+}
+
+/* ── One-time save nudge modal ── */
+.nudge-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+/* The modal is hidden via the `hidden` attribute until the JS timer fires.
+   The display:flex above would otherwise override the attribute's UA
+   display:none (author styles beat UA styles) — this restores it. */
+.nudge-overlay[hidden] {
+    display: none;
+}
+
+.nudge-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    padding: 28px 30px;
+    max-width: 400px;
+    text-align: center;
+}
+
+.nudge-icon {
+    font-size: 2em;
+    margin: 0 0 8px;
+}
+
+.nudge-card h3 {
+    margin: 0 0 8px;
+    color: #333;
+}
+
+.nudge-text {
+    color: #666;
+    font-size: 0.95em;
+    margin: 0 0 20px;
+}
+
+.nudge-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.nudge-skip {
+    background: none;
+    border: none;
+    color: #777;
+    cursor: pointer;
+    font-size: 0.95em;
+    padding: 9px 12px;
+    font-family: inherit;
+}
+
+.nudge-skip:hover {
+    color: #333;
+    text-decoration: underline;
+}

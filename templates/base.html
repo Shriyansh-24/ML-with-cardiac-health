@@ -27,9 +27,38 @@
 <body>
 
     <header class="site-header">
-        <h1>CardioGenome</h1>
-        <p class="tagline">Could genomics have seen this coming — and who actually gets to find out?</p>
+        <div class="site-header-inner">
+            <div class="site-brand">
+                <h1>CardioGenome</h1>
+                <p class="tagline">Could genomics have seen this coming — and who actually gets to find out?</p>
+            </div>
+
+            {% if auth_configured %}
+            <nav class="site-nav" aria-label="Account">
+                {% if current_user %}
+                <span class="nav-user" title="Signed in">👤 {{ current_user.email }}</span>
+                <a href="{{ url_for('history') }}">My reports</a>
+                <form method="post" action="{{ url_for('logout') }}" class="nav-form">
+                    <button type="submit" class="nav-btn">Log out</button>
+                </form>
+                {% else %}
+                <a href="{{ url_for('login') }}">Log in</a>
+                <a href="{{ url_for('signup') }}" class="nav-cta">Sign up</a>
+                {% endif %}
+            </nav>
+            {% endif %}
+        </div>
     </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-wrap">
+        {% for category, message in messages %}
+        <p class="flash flash--{{ category }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
 
     <main class="site-content">
         {% block content %}

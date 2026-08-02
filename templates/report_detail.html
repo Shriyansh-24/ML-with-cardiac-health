@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{#
+   report_detail.html — Phase 2: view one saved report.
+
+   Renders entirely from the stored JSONB snapshot (summary + conditions),
+   so it works even if the live APIs (ClinVar/GWAS) are unreachable later —
+   what you see here is what was saved at the time.
+#}
+
+{% block title %}CardioGenome — Saved Report{% endblock %}
+
+{% block content %}
+{% set summary = report.summary %}
+
+<p class="back-link">
+    <a href="{{ url_for('history') }}">← Back to my reports</a>
+</p>
+
+<section class="overview-card">
+    <h2 class="overview-title">Saved cardiac risk report</h2>
+    <p class="detail-footnote">Saved {{ report.created_at[:10] }} at {{ report.created_at[11:16] }}</p>
+
+    <div class="overview-row">
+        <span class="overview-badge overview-badge--{{ summary.risk_level | lower | replace('-', '_') }}">
+            {{ summary.risk_level }}
+        </span>
+        <span class="overview-pct">{{ "%.1f" | format(summary.probability * 100) }}%</span>
+        <span class="overview-label">Cardiac risk probability</span>
+
+        {% if summary.model_source == "nhanes" %}
+        <span class="model-badge model-badge--nhanes" title="Risk estimated from CDC NHANES national health survey (16,842 participants)">
+            NHANES
+        </span>
+        {% elif summary.model_source == "framingham" %}
+        <span class="model-badge model-badge--framingham" title="Risk estimated from Framingham Heart Study (4,189 participants)">
+            Framingham
+        </span>
+        {% endif %}
+    </div>
+
+    <p class="disclaimer-inline">
+        Saved on {{ report.created_at[:10] }}. This is an educational
+        screening tool, not a medical diagnosis.
+    </p>
+</section>
+
+<h2 class="section-heading">Condition scores at save time</h2>
+<ol class="card-list">
+    {% for item in report.conditions %}
+    <li class="card card--{{ 'detected' if item.boosts or item.rules_reasons else 'none' }}">
+        <div class="card-header">
+            <div class="card-title-group">
+                <h3 class="card-title">{{ item.full_name }}</h3>
+                <span class="card-code">{{ item.condition }}</span>
+            </div>
+            <div class="card-score-wrap">
+                <span class="card-score-num">{{ "%.1f" | format(item.hybrid_score) }}</span>
+                <span class="card-score-max">/100</span>
+            </div>
+        </div>
+
+        <div class="score-bar">
+            <div class="score-fill" data-width="{{ item.hybrid_score }}" style="width: 0%;">
+                <span class="score-fill-text">{{ "%.1f" | format(item.hybrid_score) }}/100</span>
+            </div>
+        </div>
+
+        <div class="card-meta">
+            {% if item.boosts or item.rules_reasons %}
+            <span class="card-tag tag--detected">Additional factors detected</span>
+            {% else %}
+            <span class="card-tag tag--none">No additional factors</span>
+            {% endif %}
+            {% if item.rules_max_score is defined %}
+            <span class="card-criteria">
+                <strong>{{ item.rules_score }}/{{ item.rules_max_score }}</strong> clinical criteria matched
+            </span>
+            {% endif %}
+        </div>
+
+        {% if item.boosts %}
+        <section class="detail-section">
+            <h4 class="detail-title">⚡ Factors that raised this score</h4>
+            <ul class="detail-list">
+                {% for boost in item.boosts %}
+                <li>{{ boost }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        {% if item.rules_reasons %}
+        <section class="detail-section">
+            <h4 class="detail-title">✓ Clinical criteria matched</h4>
+            <ul class="detail-list">
+                {% for reason in item.rules_reasons %}
+                <li>{{ reason }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        <section class="detail-section">
+            <h4 class="detail-title">🧬 Associated genes</h4>
+            <div class="gene-chips">
+                {% for gene in item.genes %}
+                <span class="gene-chip">{{ gene }}</span>
+                {% endfor %}
+            </div>
+        </section>
+    </li>
+    {% endfor %}
+</ol>
+
+{% endblock %}

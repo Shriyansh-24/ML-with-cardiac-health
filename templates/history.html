@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{#
+   history.html — Phase 2: the signed-in user's saved reports.
+
+   Each report row is rendered from the stored `summary` JSONB (overview
+   numbers) — the heavy per-condition detail lives on the detail page.
+#}
+
+{% block title %}CardioGenome — My Reports{% endblock %}
+
+{% block content %}
+<h2>My saved reports</h2>
+
+{% if not auth_configured %}
+<p class="form-info">Report history is not available yet — this server has not been connected to Supabase.</p>
+
+{% elif error_message %}
+<p class="form-error">{{ error_message }}</p>
+
+{% elif not reports %}
+<div class="history-empty">
+    <p>You haven't saved any reports yet.</p>
+    <p>
+        Fill in the intake form and press
+        <strong>“Save this report”</strong> on the results page to keep it here.
+    </p>
+    <a class="btn-auth" href="{{ url_for('index') }}">Take the risk assessment</a>
+</div>
+
+{% else %}
+<p class="auth-sub">
+    {{ reports | length }} saved report{% if reports | length != 1 %}s{% endif %},
+    newest first. Click a report to see the full detail.
+</p>
+
+<ul class="history-list">
+    {% for report in reports %}
+    {% set summary = report.summary %}
+    <li class="history-item">
+        <a href="{{ url_for('report_detail', report_id=report.id) }}" class="history-link">
+            <div class="history-main">
+                <span class="history-date">
+                    {{ report.created_at[:10] }}
+                </span>
+                <span class="history-score">
+                    {{ "%.1f" | format(summary.probability * 100) }}%
+                    <span class="history-level history-level--{{ summary.risk_level | lower | replace('-', '_') }}">
+                        {{ summary.risk_level }}
+                    </span>
+                </span>
+                <span class="history-source">
+                    {{ summary.model_source | upper if summary.model_source in ("nhanes", "framingham") else "estimate" }}
+                </span>
+            </div>
+        </a>
+        <form method="post" action="{{ url_for('delete_report', report_id=report.id) }}"
+              class="history-delete"
+              onsubmit="return confirm('Delete this saved report? This cannot be undone.');">
+            <button type="submit" title="Delete report">🗑 Delete</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% endblock %}

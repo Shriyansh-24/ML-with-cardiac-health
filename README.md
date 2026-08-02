@@ -18,6 +18,41 @@ python app.py
 
 Then visit `http://127.0.0.1:5000`.
 
+## Accounts & saved reports (Phase 2 — Supabase)
+
+The app works fully **without** an account (as in Phase 1). Account features
+are opt-in and turn on automatically once you connect Supabase:
+
+1. Create a project at [supabase.com](https://supabase.com) and grab the
+   project URL + keys from **Project Settings → API**.
+2. Run `sql/schema.sql` in the Supabase **SQL Editor** — it creates the
+   `reports` table (with row-level security: users can only see their own
+   rows) and the anonymised `research_data` table.
+3. Set these env vars (Render Dashboard → Environment, or your shell):
+
+   ```
+   SUPABASE_URL=https://<project-ref>.supabase.co
+   SUPABASE_ANON_KEY=<anon public key>
+   SUPABASE_SERVICE_ROLE_KEY=<service role key>   # server-side research inserts only
+   SECRET_KEY=<long random string>                # signs session cookies
+   ```
+
+   > ⚠️ The service-role key **bypasses row-level security** — it is used
+   > only on the server for anonymised research inserts and never exposed
+   > to the browser.
+
+4. Deploy/restart, and the nav bar gains **Log in / Sign up**. During
+   development you may want to turn **off email confirmation** in Supabase
+   (Authentication → Providers → Email) so signups log in instantly.
+
+### What accounts unlock
+
+- **Save reports** — a "💾 Save this report" bar on the results page; a
+  one-time nudge asks "are you sure you don't want to save?" if you skip it.
+- **My reports** (`/history`) — list, view, and delete your saved reports.
+- **Anonymised research opt-in** — a checkbox at signup; consented reports
+  are stored in `research_data` with no name, email, or account link.
+
 ## Build status
 
 | Step | Module | What | Status |
@@ -50,6 +85,8 @@ Then visit `http://127.0.0.1:5000`.
 cardiogenome/
 ├── app.py                  # Flask routes only — no business logic
 ├── requirements.txt
+├── sql/
+│   └── schema.sql          # Phase 2: Supabase tables + row-level security
 ├── ml/                     # Training pipeline + saved model + model card
 │   ├── train_nhanes.py     # NHANES XGBoost pipeline: load, clean, train,
 │   │                       #   tune (GridSearchCV), save (0.818 ROC-AUC)
@@ -60,14 +97,19 @@ cardiogenome/
 │   ├── predictor.py        # Hybrid ML + rules predictor (0-100 per condition)
 │   ├── clinvar_api.py      # Module 2: ClinVar E-utilities fetcher (MYH7 variants)
 │   ├── gwas_api.py         # Step 6: GWAS Catalog v2 associations (LQTS & FH)
-│   └── equity.py           # Module 4: equity dashboard — Plotly chart HTML
+│   ├── equity.py           # Module 4: equity dashboard — Plotly chart HTML
+│   └── auth_service.py     # Phase 2: Supabase auth + saved-report persistence
+├── templates/              # Jinja2 templates
+│   ├── base.html           # Shared HTML shell (header, nav, footer, flashes)
+│   ├── index.html          # Full intake form (17+ fields across 5 fieldsets)
+│   ├── results.html        # Tabbed report: ML overview + condition cards
+│   ├── signup.html         # Phase 2: account creation + research opt-in
+│   ├── login.html          # Phase 2: email/password sign-in
+│   ├── history.html        # Phase 2: saved reports list
+│   └── report_detail.html  # Phase 2: single saved report view
 ├── data/                   # Static datasets
 │   ├── gene_editing.json   # Module 3: CRISPR, base editing, gene therapy
 │   └── equity.json         # Module 4: disparities datasets (4 charts)
-├── templates/              # Jinja2 templates
-│   ├── base.html           # Shared HTML shell (header, footer, skeleton)
-│   ├── index.html          # Full intake form (17+ fields across 5 fieldsets)
-│   └── results.html        # Tabbed report: ML overview + condition cards
 └── static/
     └── style.css           # All styles (form, results, tabs, loading, equity)
 ```

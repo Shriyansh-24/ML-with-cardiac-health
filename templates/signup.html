@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{#
+   signup.html — Phase 2 account creation.
+
+   DESIGN NOTE: the research opt-in checkbox is the *only* place consent is
+   collected. Its value is stored in the Supabase user's metadata
+   (research_opt_in) and read back by services/auth_service.py when a report
+   is saved — if the user unchecks it, no anonymised research data is ever
+   collected for that account.
+#}
+
+{% block title %}CardioGenome — Create Account{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card">
+        <h2>Create your account</h2>
+        <p class="auth-sub">
+            Save your risk reports and track them over time. Free — takes
+            about 30 seconds.
+        </p>
+
+        {% if error_message %}
+        <p class="form-error">{{ error_message }}</p>
+        {% endif %}
+
+        {% if info_message %}
+        {# Pending email confirmation — don't show the form again, just a CTA. #}
+        <p class="form-info">{{ info_message }}</p>
+        <p class="auth-switch">
+            <a href="{{ url_for('login') }}">Go to log in</a>
+        </p>
+
+        {% elif not auth_configured %}
+        <p class="auth-unavailable">
+            Account creation is not enabled yet — this server has not been
+            connected to Supabase. Try again later, or keep using the tool
+            without an account.
+        </p>
+        {% else %}
+        <form method="post" action="{{ url_for('signup') }}" class="intake-form auth-form">
+            <label for="email">Email address</label>
+            <input type="email" id="email" name="email" required autocomplete="email"
+                   placeholder="you@example.com" value="{{ email or '' }}">
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required
+                   minlength="6" autocomplete="new-password"
+                   placeholder="At least 6 characters">
+
+            <label for="password_confirm">Confirm password</label>
+            <input type="password" id="password_confirm" name="password_confirm" required
+                   minlength="6" autocomplete="new-password">
+
+            <div class="research-consent">
+                <label class="inline consent-checkbox">
+                    <input type="checkbox" name="research_opt_in" value="yes"
+                           {% if research_opt_in %}checked{% endif %}>
+                    <span>
+                        <strong>Contribute anonymously to cardiac research (optional)</strong><br>
+                        If you allow it, your health summary and risk scores —
+                        with <em>no name, email, or account link</em> — are
+                        stored in a separate anonymised dataset to help study
+                        cardiac risk. You can still use the app fully without
+                        this.
+                    </span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-auth">Create account</button>
+        </form>
+
+        <p class="auth-switch">
+            Already have an account?
+            <a href="{{ url_for('login') }}">Log in</a>
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

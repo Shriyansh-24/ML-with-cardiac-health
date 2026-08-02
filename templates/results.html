@@ -65,6 +65,46 @@
   </p>
 </section>
 
+{# ── Save report bar (Phase 2) ─────────────────────────────────────── #}
+{% if auth_configured %}
+<section class="save-bar">
+  {% if current_user %}
+    <div class="save-bar-text">
+      <strong>Save this report?</strong>
+      <span>Keep it in your account to view it any time.</span>
+    </div>
+    <form method="post" action="{{ url_for('save_report') }}" class="save-form" id="saveReportForm">
+      <input type="hidden" name="report_json" value="{{ report_payload_json }}">
+      <button type="submit" class="save-btn" id="saveReportBtn">💾 Save this report</button>
+    </form>
+  {% else %}
+    <div class="save-bar-text">
+      <strong>Want to keep this report?</strong>
+      <span>Create a free account to save and review your reports later.</span>
+    </div>
+    <a href="{{ url_for('signup') }}" class="save-btn save-btn--link">Sign up free</a>
+  {% endif %}
+</section>
+{% endif %}
+
+{# ── One-time "are you sure?" save nudge (Phase 2) ─────────────────── #}
+{% if auth_configured and current_user %}
+<div class="nudge-overlay" id="saveNudge" hidden>
+  <div class="nudge-card">
+    <p class="nudge-icon">💾</p>
+    <h3>Are you sure you don't want to save this report?</h3>
+    <p class="nudge-text">
+      Once you leave this page, these results are gone unless you save them
+      to your account.
+    </p>
+    <div class="nudge-actions">
+      <button type="button" class="save-btn" id="nudgeSaveBtn">Save my report</button>
+      <button type="button" class="nudge-skip" id="nudgeSkipBtn">No thanks</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {# ═══════════════════════ Tab Navigation ═════════════════════════════ #}
 <div class="tab-bar" role="tablist">
   <button class="tab-btn active" role="tab" aria-selected="true" data-tab="results">
@@ -622,6 +662,44 @@
       if (w) { bar.style.width = parseFloat(w) + '%'; }
     });
   }, 80);
+})();
+
+// ── One-time save nudge (Phase 2) ──
+// If the user is signed in and hasn't saved the report, show a gentle
+// "are you sure?" prompt ONCE per page load (after a short delay so it
+// doesn't ambush them). Saving the report or clicking "No thanks" hides
+// it for this visit.
+(function() {
+  var overlay = document.getElementById('saveNudge');
+  var form = document.getElementById('saveReportForm');
+  var saveBtn = document.getElementById('saveReportBtn');
+  if (!overlay || !form) return;
+
+  var nudgeShown = false;
+  var nudgeTimer = setTimeout(function() {
+    if (!nudgeShown) {
+      nudgeShown = true;
+      overlay.hidden = false;
+    }
+  }, 6000);
+
+  function hideNudge() {
+    nudgeShown = true;
+    clearTimeout(nudgeTimer);
+    overlay.hidden = true;
+  }
+
+  document.getElementById('nudgeSkipBtn').addEventListener('click', hideNudge);
+
+  document.getElementById('nudgeSaveBtn').addEventListener('click', function() {
+    hideNudge();
+    form.submit();
+  });
+
+  // If they save via the bar button, suppress the nudge entirely.
+  if (saveBtn) {
+    saveBtn.addEventListener('click', hideNudge);
+  }
 })();
 </script>
 
